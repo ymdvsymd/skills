@@ -1,6 +1,6 @@
 # skills
 
-Claude Code の user-scope skill を [APM (Agent Package Manager)](https://microsoft.github.io/apm/) で管理する repository。
+User-scope skill 集を [APM (Agent Package Manager)](https://microsoft.github.io/apm/) で配布する repository。
 
 ## 管理対象 skill
 
@@ -11,39 +11,17 @@ Claude Code の user-scope skill を [APM (Agent Package Manager)](https://micro
 | [`usage-guide`](./.apm/skills/usage-guide/SKILL.md) | リポジトリ現在状態を分析し `.usage/` に使い方ドキュメントを生成 |
 | [`sync-with-origin-main`](./.apm/skills/sync-with-origin-main/SKILL.md) | rebase → 衝突時 merge fallback で `origin/main` を線形に追従 |
 
-## インストール (user scope = `~/.claude/skills/`)
-
-このrepoはuser scope skill 配布用 APM package。
-利用者は `apm install -g ymdvsymd/skills` だけで `~/.claude/skills/` に4 skill 全てが展開される。
+## インストール
 
 ```bash
-# 1. APM CLI を入れる (まだなら)
-brew install microsoft/apm/apm
-
-# 2. user scope へ install (~/.apm/apm.yml は auto-create される)
 apm install -g ymdvsymd/skills
 ```
 
-実行後、`~/.claude/skills/<name>/` に各 skill が verbatim で展開され、
-新規 Claude Code セッションから skill が認識される。
+APM CLI 自体のインストール、対応 platform (`claude` / `copilot` / `cursor` / `codex` / `gemini` / `windsurf` / `opencode` / `agent-skills`)、`--target` や `--update` などのオプションは [APM 公式ドキュメント](https://microsoft.github.io/apm/) 参照。
 
-更新は `apm install -g ymdvsymd/skills --update` で latest を取得。
+skill content は Claude Code の `SKILL.md` 形式で記述している。他 platform でも install できるが各platform での挙動は要検証。
 
-## 開発フロー (このrepo の編集者向け)
-
-1. `.apm/skills/<name>/` 配下のファイル (`SKILL.md` および付随 `scripts/`, `references/`, `assets/` 等) を編集
-2. `git add` → `git commit` → `git push` で GitHub に反映
-3. ローカルの user scope に取り込むには `apm install -g ymdvsymd/skills --update`
-
-ローカル試し置き (project scope に試展開) は repo root で:
-```bash
-apm install --target claude   # <repo>/.claude/skills/ に test 展開 (gitignore対象)
-```
-
-`book-translation-pipeline` のように subdirectory を持つ skill も、
-ディレクトリ全体が verbatim にコピーされる。
-
-## ファイル構成
+## 構成
 
 ```
 .
@@ -64,9 +42,4 @@ apm install --target claude   # <repo>/.claude/skills/ に test 展開 (gitignor
         └── sync-with-origin-main/
 ```
 
-## 参考
-
-- [APM 公式ドキュメント](https://microsoft.github.io/apm/)
-- [Your First Package](https://microsoft.github.io/apm/getting-started/first-package/)
-- [Skills ガイド](https://microsoft.github.io/apm/guides/skills/)
-- [CLI コマンドリファレンス](https://microsoft.github.io/apm/reference/cli-commands/)
+`.apm/skills/<name>/` を編集 → `git push` した内容は、利用者側が `apm install -g ymdvsymd/skills --update` で取得する。
