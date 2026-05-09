@@ -1,6 +1,6 @@
 name: skills
 version: 0.1.0
-description: User-scope skills (book translation pipeline, history report, usage guide, sync with origin/main)
+description: ""
 author: ymdvsymd
 dependencies:
   apm: []
