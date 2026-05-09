@@ -1,0 +1,75 @@
+import { defineConfig } from 'vitepress';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+
+function fallbackTitle(file: string) {
+  return file.replace(/^\d{2}_|\.md$/g, '').replace(/[-_]/g, ' ');
+}
+
+// 各章 .md の冒頭 `# 見出し` をサイドバー項目テキストに使う。
+// 取得失敗時は fallbackTitle (ファイル名スラッグ) に戻す。
+function pageTitle(filePath: string, file: string) {
+  try {
+    const content = readFileSync(filePath, 'utf8');
+    const title = content.match(/^#\s+(.+)$/m)?.[1]
+      .replace(/\s+\{#[^}]+}\s*$/, '')
+      .trim();
+    return title || fallbackTitle(file);
+  } catch {
+    return fallbackTitle(file);
+  }
+}
+
+// 章ファイル (NN_*.md) をソート順にサイドバー項目化する。
+// 補助ファイル `_*.md` と `index.md` は除外。
+function chapterSidebar(lang: 'en' | 'ja') {
+  const dir = join(__dirname, '..', lang);
+  let files: string[] = [];
+  try {
+    files = readdirSync(dir);
+  } catch {
+    return [];
+  }
+  return files
+    .filter(f => /^\d{2}_[A-Za-z0-9_-]+\.md$/.test(f))
+    .sort()
+    .map(f => ({
+      text: pageTitle(join(dir, f), f),
+      link: `/${lang}/${f.replace(/\.md$/, '')}`,
+    }));
+}
+
+export default defineConfig({
+  title: '__BOOK_TITLE_JA__',
+  description: '__BOOK_TITLE_JA__ — bilingual VitePress site',
+  base: '/__REPO_NAME__/',
+  lang: 'ja',
+  lastUpdated: true,
+  ignoreDeadLinks: true,
+
+  themeConfig: {
+    nav: [
+      { text: 'English', link: '/en/' },
+      { text: '日本語', link: '/ja/' },
+    ],
+    sidebar: {
+      '/en/': [
+        {
+          text: 'Contents',
+          link: '/en/',
+          items: chapterSidebar('en'),
+        },
+      ],
+      '/ja/': [
+        {
+          text: '目次',
+          link: '/ja/',
+          items: chapterSidebar('ja'),
+        },
+      ],
+    },
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/__GITHUB_USER__/__PROJECT_NAME__' },
+    ],
+  },
+});

@@ -1,0 +1,9 @@
+name: skills
+version: 0.1.0
+description: Claude Code user-scope skills (book translation pipeline, history report, usage guide, sync with origin/main)
+author: ymdvsymd
+dependencies:
+  apm: []
+  mcp: []
+includes: auto
+scripts: {}

@@ -1,0 +1,33 @@
+# Node
+node_modules/
+*.log
+
+# VitePress build artifacts
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+
+# Beads (dolt working files - not for git)
+.beads/dolt/
+.beads/embeddeddolt/
+.beads/backup/
+.beads/dolt-server.*
+.beads/.beads-credential-key
+.beads/.local_version
+.beads/last-touched
+
+# Local secrets
+.env
+.env.local
+*.pem
+*.key
+
+# (オプション) EPUB はサイズ大きいので git に乗せたくない場合は uncomment
+# docs/__EPUB_FILENAME__

@@ -1,0 +1,38 @@
+# __BOOK_TITLE_JA__
+
+EPUB→日本語訳の bilingual VitePress サイト。
+
+<!-- DEPLOY_SECTION_BEGIN -->
+## 公開先
+
+- **URL**: __DEPLOY_URL__
+- **アクセス**: __DEPLOY_ACCESS_NOTE__
+
+__DEPLOY_INSTRUCTIONS_BLOCK__
+<!-- DEPLOY_SECTION_END -->
+
+## セットアップ
+
+```sh
+npm install
+npm run dev    # http://localhost:5173/
+npm run build  # 静的サイト生成 → docs/.vitepress/dist
+```
+
+## ディレクトリ構成
+
+```
+docs/
+├── en/        # 抽出済み英語原文 (extract-epub.mjs が生成)
+├── ja/        # 日本語訳
+└── .vitepress/
+    └── config.mts
+```
+
+## 開発ワークフロー
+
+このプロジェクトは [book-translation-pipeline スキル](https://github.com/) のフロー (5 phase: setup, proof:epub-en, translation, proof:en-ja, final) で運用される。詳細は `CLAUDE.md` を参照。
+
+## ライセンス
+
+訳文の権利は原著者・出版社の規定に従う。リポジトリ自体の取り扱いは関係者間で別途合意。

@@ -1,0 +1,14 @@
+# Copy this file to .env.local and fill in the values.
+# .env.local is gitignored and never committed.
+
+# Cloudflare API Token with "Cloudflare Pages > Edit" permission.
+# Recommended additional permission: "User > User Details > Read"
+# Get one from https://dash.cloudflare.com/profile/api-tokens
+CLOUDFLARE_API_TOKEN=
+
+# Cloudflare Account ID (visible at https://dash.cloudflare.com/ right sidebar).
+CLOUDFLARE_ACCOUNT_ID=
+
+# HTTP Basic auth credentials served by functions/_middleware.ts.
+BASIC_AUTH_USER=
+BASIC_AUTH_PASS=

@@ -1,0 +1,23 @@
+---
+layout: home
+
+hero:
+  name: "__BOOK_TITLE_JA__"
+  text: ""
+  tagline: 英語原文と日本語訳を並置したオンラインリーディング
+  actions:
+    - theme: brand
+      text: 日本語で読む
+      link: /ja/
+    - theme: alt
+      text: Read in English
+      link: /en/
+
+features:
+  - title: TODO 特徴 1
+    details: 書籍ごとに 1〜2 文で本書の特徴を記述する (中核となる概念やアプローチなど)。
+  - title: TODO 特徴 2
+    details: 書籍ごとに 1〜2 文で本書の特徴を記述する (主要なパターンやテクニックなど)。
+  - title: TODO 特徴 3
+    details: 書籍ごとに 1〜2 文で本書の特徴を記述する (想定読者や応用範囲など)。
+---

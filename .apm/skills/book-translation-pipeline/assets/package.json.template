@@ -1,0 +1,18 @@
+{
+  "name": "__REPO_NAME__",
+  "version": "0.0.0",
+  "description": "__BOOK_TITLE_JA__",
+  "scripts": {
+    "dev": "vitepress dev docs",
+    "build": "vitepress build docs",
+    "serve": "vitepress serve docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/__GITHUB_USER__/__PROJECT_NAME__.git"
+  },
+  "keywords": ["translation", "japanese", "vitepress", "epub"],
+  "devDependencies": {
+    "vitepress": "^1.6.3"
+  }
+}

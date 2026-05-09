@@ -1,0 +1,3 @@
+name = "__CF_PROJECT_NAME__"
+compatibility_date = "__COMPAT_DATE__"
+pages_build_output_dir = "docs/.vitepress/dist"

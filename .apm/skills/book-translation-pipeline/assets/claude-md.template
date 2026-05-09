@@ -1,0 +1,126 @@
+# __PROJECT_NAME__ — Claude Code Instructions
+
+## プロジェクト概要
+
+__BOOK_TITLE_JA__ の日本語翻訳プロジェクト。VitePress で静的サイトを構築し、英語原文 (`docs/en/`) と日本語訳 (`docs/ja/`) を並置する。
+
+## ビルド & 実行
+
+```bash
+npm install                          # 依存インストール (初回のみ)
+npm run dev                          # 開発サーバー起動 (localhost:5173)
+npm run build                        # 本番ビルド
+npm run serve                        # ビルド済みサイトをプレビュー
+
+node scripts/extract-epub.mjs        # EPUB → docs/en/ を生成
+node scripts/extract-epub.mjs --dry-run  # ファイル一覧のみ確認
+node scripts/gen-tickets.mjs         # beads 翻訳チケット体系を生成
+node scripts/gen-tickets.mjs --dry-run   # チケット内容を確認のみ
+```
+
+## ディレクトリ構成
+
+```
+docs/
+  __EPUB_FILENAME__       # 翻訳元 EPUB (変更しない)
+  en/                     # 英語原文 (extract-epub.mjs が自動生成)
+  ja/                     # 日本語翻訳 (手作業 + Translation Agent)
+    _glossary.md          # 用語集 (翻訳前に必ず参照)
+    _styleguide.md        # 文体・Markdown 規約
+  images/                 # EPUB から抽出した画像
+  .vitepress/
+    config.mts            # VitePress 設定 (サイドバー含む)
+scripts/
+  extract-epub.mjs        # EPUB → Markdown 抽出 (book-translation-pipeline テンプレート)
+  gen-tickets.mjs         # beads チケット生成 (book-translation-pipeline テンプレート)
+  claim-next-ticket.sh    # 次チケット取得 (orchestrator 用)
+.github/workflows/
+  deploy.yml              # GitHub Pages 自動デプロイ
+```
+
+## 翻訳ワークフロー (book-translation-pipeline skill 主導)
+
+1. `node scripts/extract-epub.mjs` で英語原文を生成
+2. `node scripts/gen-tickets.mjs` で翻訳チケットを生成
+3. skill のオーケストレーションループに突入:
+   - `bd ready` で次チケット取得
+   - ラベルに応じて Translation / Proof:EPUB-EN / Proof:EN-JA Agent を spawn
+   - 各 agent が `bd close` で完了
+4. 中断時は `bd dolt push && git push`、再開時は `bd dolt pull` → ループ再開
+
+## チケットフェーズ
+
+- **setup**: ディレクトリ準備・用語集・スタイルガイド・翻訳品質比較 (s1→s2→s3→s4 の順に直列)
+- **proof:epub-en**: EPUB→Markdown 抽出結果の構造校正 (Setup と独立に並列実行可)
+- **translation**: 各章の日本語訳作成 (s4 完了が前提)
+- **proof:en-ja**: 訳文の文体・用語・構造校正 (対応する translation 完了が前提、**別 subagent**)
+- **final**: VitePress ビルド検証
+
+## エージェント分離 (重要)
+
+**翻訳と校正は別エージェントが担当する**。同じプロセスのコンテキストでは確認バイアスが効いて正しく校正できないため。
+
+- Translation Agent: `~/.claude/skills/book-translation-pipeline/agents/translation-agent.md`
+- Proof-EPUB-EN Agent: `~/.claude/skills/book-translation-pipeline/agents/proof-epub-en-agent.md`
+- Proof-EN-JA Agent: `~/.claude/skills/book-translation-pipeline/agents/proof-en-ja-agent.md`
+
+## 翻訳規約 (要約)
+
+- **文体**: である調 (`です・ます` 禁止)
+- **用語**: `docs/ja/_glossary.md` に準拠
+- **Markdown**: 英語版と同じ見出しレベルを保持
+- **コードブロック**: 訳さない (SQL・カラム名・テーブル名を維持)
+- **画像**: `./images/` のパスをそのまま使用
+- **書名・著者名**: 原文のまま (参考文献の書誌情報も翻訳しない)
+- 詳細: `docs/ja/_styleguide.md`、または `~/.claude/skills/book-translation-pipeline/references/styleguide-template.md`
+
+## 注意事項
+
+- `docs/en/` は `extract-epub.mjs` が自動生成するため**手動編集しない** (再実行で上書きされる)
+- `docs/__EPUB_FILENAME__` は変更しない
+- `_*.md` プレフィックスのファイル (用語集等) は VitePress サイドバーから除外される
+
+## Beads Issue Tracker
+
+This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
+
+### Quick Reference
+
+```bash
+bd ready              # Find available work
+bd show <id>          # View issue details
+bd update <id> --claim  # Claim work
+bd close <id>         # Complete work
+```
+
+### Rules
+
+- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
+- Run `bd prime` for detailed command reference and session close protocol
+- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+
+## Session Completion
+
+**When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
+
+**MANDATORY WORKFLOW:**
+
+1. **File issues for remaining work** - Create issues for anything that needs follow-up
+2. **Run quality gates** (if code changed) - Tests, linters, builds
+3. **Update issue status** - Close finished work, update in-progress items
+4. **PUSH TO REMOTE** - This is MANDATORY:
+   ```bash
+   git pull --rebase
+   bd dolt push
+   git push
+   git status  # MUST show "up to date with origin"
+   ```
+5. **Clean up** - Clear stashes, prune remote branches
+6. **Verify** - All changes committed AND pushed
+7. **Hand off** - Provide context for next session
+
+**CRITICAL RULES:**
+- Work is NOT complete until `git push` succeeds
+- NEVER stop before pushing - that leaves work stranded locally
+- NEVER say "ready to push when you are" - YOU must push
+- If push fails, resolve and retry until it succeeds
