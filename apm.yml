@@ -1,6 +1,6 @@
 name: skills
 version: 0.1.0
-description: ""
+description: ymdvsymd's AI agent skills for technical book translation, repo documentation, and Git workflow
 author: ymdvsymd
 dependencies:
   apm: []
