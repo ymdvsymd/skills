@@ -14,10 +14,13 @@ User-scope skill 集を [APM (Agent Package Manager)](https://microsoft.github.i
 ## インストール
 
 ```bash
-apm install -g ymdvsymd/skills
+apm install -g ymdvsymd/skills --target claude
 ```
 
-APM CLI 自体のインストール、対応 platform (`claude` / `copilot` / `cursor` / `codex` / `gemini` / `windsurf` / `opencode` / `agent-skills`)、`--target` や `--update` などのオプションは [APM 公式ドキュメント](https://microsoft.github.io/apm/) 参照。
+`--target claude` を指定して、Claude Code user scope (`~/.claude/skills/`) のみへ deploy する。
+省略すると cross-client 共通配置の `~/.agents/skills/` にも展開され、Claude Code が両方を読み込んで **同一 skill が二重登録** される (description ブロックが context に2倍入り、trigger 解決時にも2回マッチする)。
+
+APM CLI 自体のインストール、対応 platform (`claude` / `copilot` / `cursor` / `codex` / `gemini` / `windsurf` / `opencode` / `agent-skills`)、その他オプションは [APM 公式ドキュメント](https://microsoft.github.io/apm/) 参照。
 
 skill content は Claude Code の `SKILL.md` 形式で記述している。他 platform でも install できるが各platform での挙動は要検証。
 
