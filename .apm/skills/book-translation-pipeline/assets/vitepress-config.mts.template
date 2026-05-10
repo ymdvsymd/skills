@@ -49,8 +49,8 @@ export default defineConfig({
 
   themeConfig: {
     nav: [
-      { text: 'English', link: '/en/' },
       { text: '日本語', link: '/ja/' },
+      { text: 'English', link: '/en/' },
     ],
     sidebar: {
       '/en/': [
