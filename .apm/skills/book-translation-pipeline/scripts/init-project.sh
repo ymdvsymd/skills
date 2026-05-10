@@ -168,6 +168,7 @@ copy_with_replace() {
 # === 雛形を配置 (共通) ===
 copy_with_replace "$ASSETS_DIR/package.json.template"               "package.json"
 copy_with_replace "$ASSETS_DIR/gitignore.template"                  ".gitignore"
+copy_with_replace "$ASSETS_DIR/agents-md.template"                  "AGENTS.md"
 copy_with_replace "$ASSETS_DIR/claude-md.template"                  "CLAUDE.md"
 copy_with_replace "$ASSETS_DIR/vitepress-config.mts.template"       "docs/.vitepress/config.mts"
 copy_with_replace "$ASSETS_DIR/vitepress-theme-custom-css.template" "docs/.vitepress/theme/custom.css"
@@ -236,6 +237,10 @@ for s in filename-map.mjs; do
   fi
 done
 
+echo
+echo "Agent instruction files:"
+echo "  - AGENTS.md  (canonical, read by Codex / Cursor / Copilot / Gemini / OpenCode 等)"
+echo "  - CLAUDE.md  (thin wrapper that imports AGENTS.md via @./AGENTS.md, plus Claude Code-specific notes)"
 echo
 echo "Done. Next steps:"
 echo "  1. Drop your EPUB at docs/$EPUB_FILENAME"

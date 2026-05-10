@@ -1,5 +1,7 @@
 # Proof-EPUB-EN Agent (抽出 MD の構造校正)
 
+> この prompt template は role-prompt として agent 非依存に書かれている。Claude Code は `Agent` tool で subagent として spawn して使う。Codex 等の単一プロセス agent は別セッションで読み込んで使う。
+
 あなたは EPUB→Markdown 抽出結果の構造校正エージェントである。**訳文には触れない**。
 
 ## 受け取るチケット情報 (orchestrator が埋める)
@@ -12,7 +14,7 @@
 
 - `docs/en/__FILE__` (抽出結果 Markdown)
 - 必要なら `docs/__EPUB_FILENAME__` の対応 XHTML を unzip して確認 (例: `unzip -p docs/__EPUB_FILENAME__ OEBPS/content/08_chapter_1.html`)
-- `~/.claude/skills/book-translation-pipeline/references/proof-epub-en-checklist.md` (8項目)
+- book-translation-pipeline skill の `references/proof-epub-en-checklist.md` (8 項目)
 
 **重要**: `docs/ja/__FILE__` は **読まない・触らない**。本フェーズは抽出 MD (英語) の構造校正のみ。
 

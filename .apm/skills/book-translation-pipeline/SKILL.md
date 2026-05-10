@@ -86,7 +86,7 @@ EPUB spine 順 == FILENAME_MAP の値の NN 順 == docs/en/ ASCII ソート順 =
 | 「Cloudflare」「Cloudflare Pages」「Basic 認証で」「内部限定で」「ドラフトで」「関係者だけに」「private で公開」 | `--deploy-target=cloudflare` |
 | 「GitHub Pages で」「公開で」「世界に公開」「OSS として」「オープンに」 | `--deploy-target=github` |
 
-明示なしの場合: `gh repo view --json visibility` で確認。判定不能（リポジトリ未 push、`gh` 未ログイン、API エラー）なら **`AskUserQuestion` で人間に確認**してから `init-project.sh` を呼ぶ。**Claude Code の Bash ツールは tty を持たないため、対話 read プロンプトに到達させてはならない**（ハングする）。
+明示なしの場合: `gh repo view --json visibility` で確認。判定不能（リポジトリ未 push、`gh` 未ログイン、API エラー）なら **人間に確認**（Claude Code は `AskUserQuestion`、Codex 等は対話プロンプトで聞く）してから `init-project.sh` を呼ぶ。**多くの agent CLI の Bash 実行は tty を持たないため、対話 read プロンプトに到達させてはならない**（ハングする）。
 
 ### Cloudflare 選択時の追加要件
 
@@ -127,11 +127,17 @@ migrate スクリプトが旧 `.github/workflows/deploy.yml` 削除・`base:` �
    ```bash
    mkdir -p ~/oss/<project> && cd ~/oss/<project>
    gh repo create --private --source=.   # private なら Cloudflare、public なら GitHub Pages を自動選択
-   ~/.claude/skills/book-translation-pipeline/scripts/init-project.sh \
+   "$SKILL_DIR/scripts/init-project.sh" \
        <PROJECT_NAME> <epub-filename>.epub "<BOOK_TITLE_JA>" \
        [--deploy-target=cloudflare|github] [--cloudflare-project-name=<name>]
    ```
-   配置されるファイル（共通）: `README.md` / `package.json` / `.gitignore` / `CLAUDE.md` / `docs/.vitepress/config.mts` / `docs/.vitepress/theme/{custom.css,index.ts}` / `docs/index.md` / `docs/ja/index.md` / `scripts/{extract-epub.mjs,gen-tickets.mjs,claim-next-ticket.sh}`
+
+   `$SKILL_DIR` は本 skill の install 先。agent ごとに異なる:
+   - Claude Code: `~/.claude/skills/book-translation-pipeline/`
+   - Codex CLI: `~/.codex/skills/book-translation-pipeline/` または `~/.agents/skills/book-translation-pipeline/`
+   - APM の `agent-skills` (cross-client) target: `~/.agents/skills/book-translation-pipeline/`
+
+   配置されるファイル（共通）: `README.md` / `package.json` / `.gitignore` / `AGENTS.md` (canonical) / `CLAUDE.md` (`@./AGENTS.md` import + Claude Code 固有 hint) / `docs/.vitepress/config.mts` / `docs/.vitepress/theme/{custom.css,index.ts}` / `docs/index.md` / `docs/ja/index.md` / `scripts/{extract-epub.mjs,gen-tickets.mjs,claim-next-ticket.sh}`
 
    デプロイ先別:
    - **GitHub Pages**: `.github/workflows/deploy.yml`（既存どおり）
@@ -179,31 +185,35 @@ loop:
 
   switch labels:
     contains 'translation' AND NOT 'proof:*':
-      Agent(subagent_type="general-purpose",
-            prompt=read("agents/translation-agent.md")
-                   .replace('__TICKET_ID__', ticket_id)
-                   .replace('__FILE__', ticket.file)
-                   .replace('__TITLE_JA__', ticket.title_ja)
-                   .replace('__EPUB_FILENAME__', config.epubFilename))
+      run_role(role_prompt="agents/translation-agent.md", ticket=ticket)
     contains 'proof:epub-en':
-      Agent(subagent_type="general-purpose",
-            prompt=read("agents/proof-epub-en-agent.md").replace(...))
+      run_role(role_prompt="agents/proof-epub-en-agent.md", ticket=ticket)
     contains 'proof:en-ja':
-      Agent(subagent_type="general-purpose",
-            prompt=read("agents/proof-en-ja-agent.md").replace(...))
+      run_role(role_prompt="agents/proof-en-ja-agent.md", ticket=ticket)   # 別 context 必須
     contains 'setup' or 'final':
       # orchestrator (=メインエージェント) 自身が処理
       handle_inline(ticket)
 
-  # subagent が bd close を実行する。失敗時は in_progress のまま残る
-  # 同一章の translation と proof:en-ja を同時に subagent spawn しない (ファイル書き込み race を防ぐ)
-  # subagent 戻り後に `bd show <id> --json | jq -r .status` で確認、closed でなければインラインで close
+  # run_role の実装は agent ごとに異なる:
+  #   Claude Code:
+  #     Agent(subagent_type="general-purpose",
+  #           prompt=read(role_prompt)
+  #                  .replace('__TICKET_ID__', ticket.id)
+  #                  .replace('__FILE__', ticket.file)
+  #                  .replace('__TITLE_JA__', ticket.title_ja)
+  #                  .replace('__EPUB_FILENAME__', config.epubFilename))
+  #   Codex 等の単一プロセス agent:
+  #     same template を inline prompt として実行。proof:en-ja は新規セッション (別 codex プロセス) で起動して context 分離する
+  #
+  # 実行後 `bd close` は role agent が行う。失敗時は in_progress のまま残る
+  # 同一章の translation と proof:en-ja を同時に走らせない (ファイル書き込み race を防ぐ)
+  # 戻り後に `bd show <id> --json | jq -r .status` で確認、closed でなければインラインで close
 ```
 
 メインエージェントとしての行動:
 
 - 各イテレーションで `claim-next-ticket.sh` を呼び、claim 済みチケットの JSON を取得
-- ラベルから種別を判定し、`Agent` tool で対応する subagent を spawn
+- ラベルから種別を判定し、対応する role agent prompt (`agents/<role>-agent.md`) を実行する（Claude Code: `Agent` tool で subagent spawn / 他 agent: inline prompt として読み込み、`proof:en-ja` のみ別セッションで起動）
 - subagent の戻り値 (200 字サマリ) を確認し、次のイテレーションへ
 - ループ中 `bd dolt push && git push` でリモート同期 (10 チケットに 1 度程度)
 
@@ -267,12 +277,17 @@ loop:
 
 ## エージェント分離 (核心設計)
 
-**翻訳と校正は同じ Claude プロセスのコンテキストで処理してはいけない**:
+**翻訳と校正は同じプロセス・同じ context で処理してはいけない** (agent 種別を問わず):
 
 - Translation Agent は「自分が選んだ訳語」「自分の訳文構造」に対して**確認バイアス**を持つため、自分の訳を客観的に校正できない
 - 校正は「読んでいない訳文を初見で見て、原文との齟齬を発見する」作業であり、コンテキスト分離が品質の前提条件
 
-skill では各タスクごとに `Agent` tool で `subagent_type="general-purpose"` を呼び、`agents/<role>-agent.md` の prompt template をそのまま渡す:
+skill は各タスクごとに `agents/<role>-agent.md` の prompt template に `__TICKET_ID__`, `__FILE__`, `__TITLE_JA__`, `__EPUB_FILENAME__` を埋め込んで担当 agent に渡す。実装は agent 種別で異なる:
+
+- **Claude Code**: orchestrator が `Agent` tool で `subagent_type="general-purpose"` として spawn する。context が自動分離される
+- **Codex 等の単一プロセス agent**: 同 prompt を inline で読み込んで実行。`proof:en-ja` だけは新規 CLI セッション (別 codex プロセス) で起動して context を分離する
+
+prompt template と担当ラベル:
 
 | Agent 種別 | prompt template | 担当 |
 |---|---|---|
@@ -284,7 +299,7 @@ prompt 内のプレースホルダ (`__TICKET_ID__`, `__FILE__`, `__TITLE_JA__`,
 
 ## bd 連携
 
-プロジェクトの CLAUDE.md に bd 統合ブロックが含まれる場合、TodoWrite / TaskCreate ではなく **`bd` を使う**:
+プロジェクトの `AGENTS.md`（および Claude Code が import する `CLAUDE.md`）に bd 統合ブロックが含まれる場合、ad-hoc TODO リストではなく **`bd` を使う**:
 
 ```bash
 bd ready              # 次の作業可能チケット

@@ -10,7 +10,7 @@
 //   Proof:EN-JA    - 1チケット/ファイル (対応 translation 完了が前提、訳文の品質校正)
 //   Final          - VitePress ビルド確認 + 全体目視 (全 translation + proof:en-ja 完了が前提)
 //
-// 詳細: ~/.claude/skills/book-translation-pipeline/references/gen-tickets-customization.md
+// 詳細: book-translation-pipeline skill の references/gen-tickets-customization.md
 //
 // 使い方:
 //   node scripts/gen-tickets.mjs           # 本番実行
@@ -149,7 +149,7 @@ const PROOF_JA_CHECKLIST = `## 校正観点 (9項目すべて確認)
 6. **図表参照**: 「図N.N」「表N.N」「第N章」表記が統一されているか
 7. **原文維持**: コードブロック・SQL・カラム名・書名・著者名は翻訳していないか
 8. **数値・年号**: 数値・日付・パーセント表記が原文と一致しているか
-9. **日本語表現の自然さ**: 直訳臭・てにをは・主述ねじれ・読点配置・カタカナ漢語の混在を是正、用語の現代的妥当性 (例: "後付" は誤り → "巻末") を確認 (詳細: ~/.claude/skills/book-translation-pipeline/references/proof-en-ja-checklist.md #9)
+9. **日本語表現の自然さ**: 直訳臭・てにをは・主述ねじれ・読点配置・カタカナ漢語の混在を是正、用語の現代的妥当性 (例: "後付" は誤り → "巻末") を確認 (詳細: book-translation-pipeline skill の references/proof-en-ja-checklist.md #9)
 
 ## 進め方
 
@@ -201,7 +201,7 @@ function createIssue({ title, description, type = 'task', priority = 2, labels =
 async function main() {
   if (Object.keys(CONFIG.chapterTitleJa).length === 0 && Object.keys(CONFIG.specialTitleJa).length === 0) {
     console.error('Error: CONFIG.chapterTitleJa / specialTitleJa が空です。');
-    console.error('See ~/.claude/skills/book-translation-pipeline/references/gen-tickets-customization.md');
+    console.error('See: book-translation-pipeline skill の references/gen-tickets-customization.md');
     process.exit(1);
   }
 

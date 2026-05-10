@@ -1,5 +1,7 @@
 # 5 フェーズワークフロー (book-translation-pipeline)
 
+> **agent-agnostic note**: 本書類で「Agent tool で spawn」「subagent」と書いている箇所は **Claude Code 固有の orchestration** を指す。Codex / Cursor / OpenCode 等の単一プロセス agent は、同じ `agents/<role>-agent.md` を inline prompt として読み込み、`proof:en-ja` は新規 CLI セッションで分離して実行する（context 混ざり防止）。
+
 ## 依存関係
 
 ```
@@ -37,7 +39,7 @@
 
 ### Translation (各章 1 件、s4 完了が前提)
 
-- **担当**: Translation Agent (`agents/translation-agent.md`) を Agent tool で spawn
+- **担当**: Translation Agent (`agents/translation-agent.md`) を担当（Claude Code: Agent tool で spawn / 他 agent: inline prompt）
 - **依存**: setup s1〜s4 (`setupDeps`)
 - **入力**: docs/en/<file>, docs/ja/_glossary.md, docs/ja/_styleguide.md
 - **出力**: docs/ja/<file>
@@ -53,7 +55,7 @@
 
 ### Proof:EN-JA (各章 1 件、対応 Translation 完了が前提)
 
-- **担当**: Proof-EN-JA Agent (`agents/proof-en-ja-agent.md`) を**別 subagent** として spawn
+- **担当**: Proof-EN-JA Agent (`agents/proof-en-ja-agent.md`) を**翻訳とは別 context** で担当（Claude Code: Agent tool で別 subagent として spawn / 他 agent: 別セッションで起動）
 - **依存**: 対応する translation チケット (1:1)
 - **入力**: docs/en/<file>, docs/ja/<file>, _glossary.md, _styleguide.md
 - **出力**: docs/ja/<file> 修正
@@ -97,12 +99,15 @@ loop:
   bd update <ticket.id> --claim
 
   switch ticket.label:
-    'translation'   -> Agent(prompt=agents/translation-agent.md)
-    'proof:epub-en' -> Agent(prompt=agents/proof-epub-en-agent.md)
-    'proof:en-ja'   -> Agent(prompt=agents/proof-en-ja-agent.md)
+    'translation'   -> spawn_or_inline(agents/translation-agent.md)
+    'proof:epub-en' -> spawn_or_inline(agents/proof-epub-en-agent.md)
+    'proof:en-ja'   -> spawn_or_inline(agents/proof-en-ja-agent.md)   # 別 context 必須
     'setup'/'final' -> Orchestrator 自身が処理
 
-  # subagent が bd close を実行
+  # spawn_or_inline:
+  #   Claude Code: Agent(subagent_type="general-purpose", prompt=...)
+  #   Codex 等  : 同 prompt を inline で読み込んで実行 (proof:en-ja のみ別セッション推奨)
+  # 役割 agent が bd close を実行
   # 失敗時は in_progress のまま残る -> 次回セッションで再 claim
 ```
 

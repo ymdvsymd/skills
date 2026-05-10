@@ -4,7 +4,7 @@
 // 新規プロジェクトでは下記 CONFIG オブジェクトのみを書き換える。
 // テンプレートロジック (ヘルパー関数群) は基本変更不要。
 //
-// 詳細: ~/.claude/skills/book-translation-pipeline/references/extract-epub-customization.md
+// 詳細: book-translation-pipeline skill の references/extract-epub-customization.md
 //
 // 使い方:
 //   node scripts/extract-epub.mjs              # 本番抽出
@@ -940,7 +940,7 @@ function deriveKey(href) {
 async function main() {
   if (CONFIG.epubFilename === 'TODO_FILL.epub' || Object.keys(filenameMap).length === 0) {
     console.error('Error: CONFIG is not filled in. Edit scripts/extract-epub.mjs CONFIG block and scripts/lib/filename-map.mjs first.');
-    console.error('See ~/.claude/skills/book-translation-pipeline/references/extract-epub-customization.md');
+    console.error('See: book-translation-pipeline skill の references/extract-epub-customization.md');
     process.exit(1);
   }
 

@@ -117,7 +117,7 @@ description: >-
 
 **生成日:** YYYY-MM-DD
 **対象バージョン:** [name] vX.Y.Z
-**生成者:** Claude Code
+**生成者:** AI Agent
 
 ---
 

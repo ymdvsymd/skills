@@ -31,7 +31,7 @@ docs/
 
 ## 開発ワークフロー
 
-このプロジェクトは [book-translation-pipeline スキル](https://github.com/) のフロー (5 phase: setup, proof:epub-en, translation, proof:en-ja, final) で運用される。詳細は `CLAUDE.md` を参照。
+このプロジェクトは [book-translation-pipeline スキル](https://github.com/) のフロー (5 phase: setup, proof:epub-en, translation, proof:en-ja, final) で運用される。詳細は `AGENTS.md` を参照（Claude Code は `CLAUDE.md` 経由で同じ内容を import 済み）。
 
 ## ライセンス
 

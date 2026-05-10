@@ -105,7 +105,7 @@
 
 ## 校正観点 (proof:en-ja 8 項目)
 
-詳細は `~/.claude/skills/book-translation-pipeline/references/proof-en-ja-checklist.md` 参照:
+詳細は book-translation-pipeline skill の `references/proof-en-ja-checklist.md` 参照:
 
 1. 訳漏れなし
 2. 誤訳なし

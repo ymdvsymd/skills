@@ -1,7 +1,21 @@
 name: skills
 version: 0.1.0
-description: ymdvsymd's AI agent skills for technical book translation, repo documentation, and Git workflow
+description: ymdvsymd's agent-agnostic AI skills (book translation pipeline, repo docs, Git workflow); SKILL.md per Anthropic Skills spec, distributable to Claude Code, Codex CLI, and other agents.md-compatible agents
 author: ymdvsymd
+license: MIT
+keywords:
+  - skills
+  - agent-agnostic
+  - agents-md
+  - book-translation
+  - vitepress
+  - epub
+  - beads
+  - git-workflow
+targets:
+  - claude
+  - codex
+  - agent-skills
 dependencies:
   apm: []
   mcp: []

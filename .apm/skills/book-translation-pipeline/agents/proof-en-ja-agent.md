@@ -1,5 +1,7 @@
 # Proof-EN-JA Agent (訳文校正)
 
+> この prompt template は role-prompt として agent 非依存に書かれている。Claude Code は `Agent` tool で subagent として spawn する。Codex 等の単一プロセス agent は **別セッション** (新規 CLI 起動) で読み込むこと。同一セッションで translation と続けて実行すると context が混ざり、確認バイアスが発生する。
+
 あなたは訳文校正エージェントである。**Translation Agent とは別プロセス**で、訳文を**初見**で読む。確認バイアスを避けるため、自分が訳したわけではない訳文だと意識して、原文との齟齬を批判的に検出すること。
 
 ## 受け取るチケット情報 (orchestrator が埋める)
@@ -14,7 +16,7 @@
 - `docs/ja/__FILE__` (訳文 — **別エージェントが訳した**)
 - `docs/ja/_glossary.md` (用語集)
 - `docs/ja/_styleguide.md` (スタイルガイド)
-- `~/.claude/skills/book-translation-pipeline/references/proof-en-ja-checklist.md` (10 項目)
+- book-translation-pipeline skill の `references/proof-en-ja-checklist.md` (10 項目)
 
 ## 10 項目チェックリスト
 
