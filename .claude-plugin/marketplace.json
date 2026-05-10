@@ -1,0 +1,24 @@
+{
+  "name": "ymdvsymd-skills",
+  "owner": {
+    "name": "ymdvsymd"
+  },
+  "metadata": {
+    "description": "ymdvsymd's agent-agnostic skills (book translation, repo docs, Git workflow)",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "ymdvsymd-skills",
+      "description": "Book translation pipeline, history-report, usage-guide, sync-with-origin-main",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/book-translation-pipeline",
+        "./skills/history-report",
+        "./skills/usage-guide",
+        "./skills/sync-with-origin-main"
+      ]
+    }
+  ]
+}
