@@ -79,11 +79,15 @@ export default defineConfig({
         miniSearch: {
           options: {
             tokenize: (text: string) =>
-              Array.from(
-                new Intl.Segmenter('ja', { granularity: 'word' }).segment(text),
-              )
-                .map((s) => s.segment)
-                .filter((s) => s.trim().length > 0),
+              text
+                .split(/[\s　]+/)
+                .flatMap(
+                  (w) =>
+                    w.match(
+                      /[぀-ゟ]+|[゠-ヿ]+|[一-鿿]+|[A-Za-z0-9_-]+/g,
+                    ) ?? [],
+                )
+                .filter((w) => w.length > 0),
           },
           searchOptions: {
             fuzzy: 0.2,
