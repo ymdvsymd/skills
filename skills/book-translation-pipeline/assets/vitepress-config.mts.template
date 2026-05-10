@@ -52,6 +52,47 @@ export default defineConfig({
       { text: '日本語', link: '/ja/' },
       { text: 'English', link: '/en/' },
     ],
+    search: {
+      provider: 'local',
+      options: {
+        locales: {
+          ja: {
+            translations: {
+              button: {
+                buttonText: '検索',
+                buttonAriaLabel: '検索',
+              },
+              modal: {
+                displayDetails: '詳細を表示',
+                resetButtonTitle: 'リセット',
+                backButtonTitle: '戻る',
+                noResultsText: '結果が見つかりません',
+                footer: {
+                  selectText: '選択',
+                  navigateText: '移動',
+                  closeText: '閉じる',
+                },
+              },
+            },
+          },
+        },
+        miniSearch: {
+          options: {
+            tokenize: (text: string) =>
+              Array.from(
+                new Intl.Segmenter('ja', { granularity: 'word' }).segment(text),
+              )
+                .map((s) => s.segment)
+                .filter((s) => s.trim().length > 0),
+          },
+          searchOptions: {
+            fuzzy: 0.2,
+            prefix: true,
+            boost: { title: 4, text: 2, titles: 1 },
+          },
+        },
+      },
+    },
     sidebar: {
       '/en/': [
         {
