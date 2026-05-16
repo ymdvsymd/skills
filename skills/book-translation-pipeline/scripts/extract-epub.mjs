@@ -214,10 +214,14 @@ function wrapEmphasis(text, marker) {
 }
 
 function stripInvisibleAnchors(s) {
-  // O'Reilly EPUB の indexterm/noteref anchor は索引マーカーで、訳文には不要
+  // O'Reilly EPUB の indexterm anchor (self-closing) は索引マーカーで、訳文には不要。
+  // noteref は脚注参照なので残し、convertInline Step 1 で `[N](#id)` 形式の Markdown リンクに変換する。
+  // 以前は `\/?>` を使っていたため `?` で `/` が optional になり、noteref の opening tag (`<a ...>`)
+  // も誤って一致して削除され、本文中の `<sup>1</a></sup>` から `1` だけが残る不具合があった。
+  // 修正: self-closing 形式は `\/>` (必須 `/`) で厳密に限定する。
   return s
-    .replace(/<a[^>]*\bdata-type="(indexterm|noteref)"[^>]*\/?>/g, '')
-    .replace(/<a[^>]*\bdata-type="(indexterm|noteref)"[^>]*>[\s\S]*?<\/a>/g, '');
+    .replace(/<a[^>]*\bdata-type="indexterm"[^>]*\/>/g, '')
+    .replace(/<a[^>]*\bdata-type="indexterm"[^>]*>[\s\S]*?<\/a>/g, '');
 }
 
 function convertInline(html) {
@@ -271,7 +275,13 @@ function convertInline(html) {
   s = s.replace(/<span[^>]*class="superscript"[^>]*>([\s\S]*?)<\/span>/g, '<sup>$1</sup>');
   s = s.replace(/<code[^>]*>([\s\S]*?)<\/code>/g, (_, t) => '`' + stripTags(t).replace(/`/g, '\\`') + '`');
   s = s.replace(/<br\s*\/?>/g, '\n');
-  s = s.replace(/<[^>]+>/g, '');
+  // 残った HTML タグを除去するが、脚注の視覚スタイル (<sup>) と id アンカー (<a id="X"></a>) は
+  // Markdown では再現できないため例外として保持する。
+  s = s.replace(/<\/?[a-z][^>]*>/gi, (tag) => {
+    if (/^<\/?sup\s*>$/i.test(tag)) return tag;
+    if (/^<a\s+id="[^"]+"\s*>$/i.test(tag) || /^<\/a>$/i.test(tag)) return tag;
+    return '';
+  });
   return decodeEntities(s).trim();
 }
 
@@ -726,6 +736,15 @@ function convertToBlocks(xhtml, oebpsDir, tableStore = null, exampleStore = null
         } else if (cls === 'listbulleted' || cls === 'parabulleted') {
           blocks.push({ type: 'bullet', text: convertInline(inner) });
         } else {
+          // <p id="X"> (例: 脚注本文 <p data-type="footnote" id="idmXXX">) は
+          // anchor block を先に push してジャンプ先を作る。
+          // 脚注本文は `idm<digits>` (suffix なし) を id にとるため通常は ephemeral 扱いとなるが、
+          // data-type="footnote" の場合は本文中の noteref から参照されるので保持する。
+          const pIdM = attrs.match(/\bid="([^"]+)"/);
+          const isFootnote = /\bdata-type="footnote"/.test(attrs);
+          if (pIdM && (isFootnote || !isEphemeralId(pIdM[1]))) {
+            blocks.push({ type: 'anchor', text: `<a id="${pIdM[1]}"></a>` });
+          }
           const text = convertInline(inner);
           if (text) blocks.push({ type: 'p', text });
         }
