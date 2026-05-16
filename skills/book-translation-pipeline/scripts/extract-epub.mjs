@@ -287,6 +287,9 @@ function convertInline(html) {
 
 // --- Code block (<pre>) 変換 ---
 function convertCodeBlock(preHtml) {
+  // O'Reilly Atlas: <pre class="image-source"> は asciidoc 由来の図ソース (plantuml/ditaa)。
+  // images/ に画像が別途あるため本文出力からは除外する。
+  if (/<pre[^>]*\bclass="[^"]*\bimage-source\b/i.test(preHtml)) return '';
   const langM = preHtml.match(/data-code-language="([^"]+)"/);
   const lang = langM ? langM[1] : '';
   const innerM = preHtml.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
