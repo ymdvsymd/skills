@@ -1,6 +1,10 @@
 # APM cache (per APM official guidance)
 apm_modules/
 
+# Skill development workspaces and evaluation outputs (skill-creator iterations)
+evals/
+*-workspace/
+
 # Project-scope APM artifacts (このrepoは user scope install 専用)
 apm.lock.yaml
 .claude/skills/
