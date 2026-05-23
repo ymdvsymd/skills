@@ -1,4 +1,4 @@
-# Proof:EN-JA 8 項目チェックリスト
+# Proof:EN-JA 11 項目チェックリスト
 
 訳文 (`docs/ja/*.md`) の品質校正用 8 項目。`Proof-EN-JA Agent` が **Translation Agent とは別プロセスで初見** で読みながら使用する。確認バイアスを排除するため、自分が訳したのではないと意識する。
 
@@ -227,10 +227,29 @@ node scripts/check-links.mjs                   # errors=0 必須
 - 見出しレベルが en と不一致で position 照合が skip された章は、見出しレベルを en に合わせて再生成
 - `[テキスト](URL)` の **テキスト** (リンクラベル) が訳されていなければ訳す (URL 部分は触らない)
 
+### 11. コードブロック整合
+
+翻訳エージェントが ` ```language ``` ` フェンス済みコードブロックを誤って分解し、` `def` `allocate` `(` `line` `:` ` のような単一バッククォート inline code の連なりに変換してしまうことがある (LLM の出力ゆらぎ)。
+
+**自動検出**:
+
+```bash
+# 1) en/ja でフェンス件数が一致するか
+grep -c '^```' docs/en/<file>.md
+grep -c '^```' docs/ja/<file>.md      # 値が一致しなければ要修正
+
+# 2) 断片化 inline code がゼロか
+node scripts/check-code-fragments.mjs docs/ja/<file>.md
+```
+
+**修正方針**:
+- 断片化が検出されたら、対応する `docs/en/` のフェンス済みコードブロックを `docs/ja/` にそのままコピーし直す
+- コードブロック内のコメント (`# ...`) は英語原文のまま維持 (訳さない)
+
 ## 進め方
 
 1. `docs/en/<file>.md` と `docs/ja/<file>.md` を**並べて**対比 (両方を上から順に読み比べる)
-2. 観点 1〜10 を順に確認
+2. 観点 1〜11 を順に確認
 3. 問題箇所は `docs/ja/<file>.md` に**直接修正**
 4. 修正観点と件数を bd notes に記録 (例: `"#2 誤訳 3 件 (受動態 2, 複数形 1), #3 用語不一致 2 件, #4 です・ます 1 件, #10 死リンク 5 件"`)
 5. `bd close <ticket_id> --reason "proof:en-ja: <観点>×<件数> 修正"` を実行

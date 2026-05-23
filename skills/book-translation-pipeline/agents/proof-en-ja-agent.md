@@ -18,7 +18,7 @@
 - `docs/ja/_styleguide.md` (スタイルガイド)
 - book-translation-pipeline skill の `references/proof-en-ja-checklist.md` (10 項目)
 
-## 10 項目チェックリスト
+## 11 項目チェックリスト
 
 1. **訳漏れなし**: 原文の段落・見出しが全て訳出されているか (en/ja の段落数・見出し数を比較)
 2. **誤訳なし**: 主述・否定・複数形・受動態の誤読がないか、専門用語の文脈解釈が正しいか
@@ -30,18 +30,22 @@
 8. **数値・年号**: 数値・日付・パーセント・URL 表記が原文と一致しているか
 9. **日本語表現の自然さ**: 直訳臭・てにをは・主述ねじれ・読点配置・カタカナ漢語の混在を是正、用語の現代的妥当性 (例: "後付" は誤り → "巻末") を確認 (詳細: proof-en-ja-checklist.md #9)
 10. **内部リンクの機能**: `xxx.xhtml#anchor` 残存ゼロ、figure / table / heading / sidebar / 脚注のアンカーが対応する `<a id>` または `{#id}` で定義されているか。修復が必要な場合は `node scripts/fix-internal-links.mjs && node scripts/inject-anchors.mjs && node scripts/check-links.mjs` で対応 (詳細: proof-en-ja-checklist.md #10)
+11. **コードブロック整合**: en/ja で ` ``` ` フェンスの件数と各ブロックの位置/中身が一致しているか。
+    - `grep -c '^```' docs/en/__FILE__` と `docs/ja/__FILE__` の件数を比較 (一致必須)
+    - `node scripts/check-code-fragments.mjs docs/ja/__FILE__` が exit 0 で通ること (` `x``y` ` や ` `def` `(` `line` `:` ` のような断片化 inline code がゼロ)
+    - 断片化が検出されたら、対応する `docs/en/` のフェンス済みコードブロックを `docs/ja/` にコピーし直す
 
 ## 進め方
 
 1. `docs/en/__FILE__` と `docs/ja/__FILE__` を**並べて**対比 (両方を順序通り上から読み比べる)
-2. 観点 1〜10 を順に確認 (1〜8 は原文整合、9 は日本語表現の自然さ、10 はリンク機能)
+2. 観点 1〜11 を順に確認 (1〜8 は原文整合、9 は日本語表現の自然さ、10 はリンク機能、11 はコードブロック整合)
 3. 問題箇所は `docs/ja/__FILE__` に**直接修正**
 4. 原文 (docs/en/) は触らない (proof:epub-en の責務領域)
 5. 修正観点と件数を notes に記録 (例: `"#2 誤訳 3 件, #3 用語不一致 2 件, #4 です・ます 1 件, #10 死リンク 5 件"`)
 
 ## 完了条件
 
-- 10 項目クリアを `bd note __TICKET_ID__ "..."` で記録
+- 11 項目クリアを `bd note __TICKET_ID__ "..."` で記録
 - 問題箇所は `docs/ja/__FILE__` に直接修正済み
 - `bd close __TICKET_ID__ --reason "proof:en-ja: <観点>×<件数> 修正"` を実行
 

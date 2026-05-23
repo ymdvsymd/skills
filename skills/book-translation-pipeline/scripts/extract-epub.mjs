@@ -325,8 +325,27 @@ function convertOReillyNote(divHtml, label) {
     body = body.replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/i, '');
   }
   const lines = [`> **${title}**`, '> '];
-  for (const m of body.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)) {
-    const text = convertInline(m[1]);
+  // 子要素 <p>|<pre>|<ul>|<ol> を順序通り処理する。
+  // 注: regex は <p\b...> として word boundary を要求する。<p[^>]*> だと <pre data-type="...">
+  // にも誤マッチし、<pre> の中身が <p> の続きとして捕捉されてしまう (各 <code> 子要素が
+  // 個別バッククォートに変換され、`def` `allocate``(``line`... のような断片化出力になる)。
+  const childRegex = /<(p|pre|ul|ol)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
+  for (const m of body.matchAll(childRegex)) {
+    const tag = m[1].toLowerCase();
+    let text;
+    if (tag === 'pre') {
+      text = convertCodeBlock(m[0]);
+    } else if (tag === 'p') {
+      text = convertInline(m[3]);
+    } else if (tag === 'ul') {
+      const items = [...m[3].matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)]
+        .map(lm => `- ${convertInline(lm[1])}`);
+      text = items.join('\n');
+    } else if (tag === 'ol') {
+      const items = [...m[3].matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)]
+        .map((lm, i) => `${i + 1}. ${convertInline(lm[1])}`);
+      text = items.join('\n');
+    }
     if (text) {
       for (const line of text.split('\n')) {
         lines.push('> ' + line);

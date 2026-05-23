@@ -50,7 +50,7 @@ description: |
 
 - 新規翻訳プロジェクトを `~/oss/<project>/` に立ち上げる
 - 既存 EPUB から日英並置 VitePress サイトを構築する
-- proof:epub-en / proof:en-ja の 8 項目チェックリストを参照する
+- proof:epub-en (10 項目) / proof:en-ja (11 項目) チェックリストを参照する
 - extract-epub.mjs / gen-tickets.mjs を新書籍向けにカスタマイズする
 - extract-epub.mjs 改修後の再校正バッチを起票する (`references/reproof-pattern.md`)
 - 中断したセッションから `bd ready` で復帰する
@@ -316,8 +316,9 @@ orchestrator は `scripts/claim-next-ticket.sh` を使うと race condition な�
 ## Detailed references
 
 - 5 フェーズの依存関係と作業詳細 → `references/workflow-phases.md`
-- 抽出 MD 構造校正の 8 項目 → `references/proof-epub-en-checklist.md`
-- 訳文校正の 8 項目 → `references/proof-en-ja-checklist.md`
+- 抽出 MD 構造校正の 10 項目 → `references/proof-epub-en-checklist.md`
+- 訳文校正の 11 項目 → `references/proof-en-ja-checklist.md`
+- コードフラグメント検出 lint (`scripts/check-code-fragments.mjs`) → 抽出/翻訳両方で実行可
 - ファイル名規則と不変条件 → `references/filename-conventions.md`
 - extract-epub.mjs CONFIG 埋め方 → `references/extract-epub-customization.md`
 - EPUB 構造バリエーション (出版社別の anchor 抽出パターン) → `references/epub-variations.md`

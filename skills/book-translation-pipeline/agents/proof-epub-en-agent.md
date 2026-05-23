@@ -14,11 +14,11 @@
 
 - `docs/en/__FILE__` (抽出結果 Markdown)
 - 必要なら `docs/__EPUB_FILENAME__` の対応 XHTML を unzip して確認 (例: `unzip -p docs/__EPUB_FILENAME__ OEBPS/content/08_chapter_1.html`)
-- book-translation-pipeline skill の `references/proof-epub-en-checklist.md` (8 項目)
+- book-translation-pipeline skill の `references/proof-epub-en-checklist.md` (10 項目)
 
 **重要**: `docs/ja/__FILE__` は **読まない・触らない**。本フェーズは抽出 MD (英語) の構造校正のみ。
 
-## 9 項目チェックリスト
+## 10 項目チェックリスト
 
 1. **構造保持**: H1〜H4 が原文 XHTML の `p.chaptertitle` / `p.h1`〜`p.h5` または `<h1>`〜`<h4>` と一致しているか
 2. **段落の欠落なし**: 原文 `<p>` の段落・センテンスが脱落していないか
@@ -29,6 +29,9 @@
 7. **エンティティ展開**: `&amp;` / `&mdash;` / `&copy;` 等が Unicode (`&` `—` `©`) に展開されているか
 8. **ノイズ混入なし**: 著作権表示・ページ番号・CSS 残骸・透かし文字 (例: OceanofPDF.com) が本文に紛れていないか
 9. **内部リンク・アンカー定義**: `xxx.xhtml#anchor` 残存ゼロ、figure / table / heading / sidebar / callout / 脚注 sup ref のアンカーが保持されているか。漏れがあれば `node scripts/inject-anchors.mjs --en-only` で補完、`node scripts/check-links.mjs` で確認 (詳細: proof-epub-en-checklist.md #9)
+10. **コードブロック整合**: `node scripts/check-code-fragments.mjs docs/en/__FILE__` が exit 0 で通ること。
+    - 検出される代表的なバグ: sidebar/Note 内 `<pre class="skip">` の各 `<code>` トークンが個別バッククォートに断片化 (` `def` `allocate``(``line` ` 形式)
+    - 検出された場合は EPUB の対応 XHTML を `unzip -p` で確認し、`extract-epub.mjs` 改修の follow-up チケットを起票
 
 ## 進め方
 
@@ -45,9 +48,9 @@
 
 ## 完了条件
 
-- 9 項目すべてクリアを `bd note __TICKET_ID__ "checklist 9/9 passed"` で記録
+- 10 項目すべてクリアを `bd note __TICKET_ID__ "checklist 10/10 passed"` で記録
 - 修正した観点と件数を notes に記録 (例: `"#5 figurecaption 3 件追加, #8 watermark 2 行除去, #9 anchor 漏れ 4 件 inject"`)
-- `bd close __TICKET_ID__ --reason "proof:epub-en passed (9/9)"` を実行
+- `bd close __TICKET_ID__ --reason "proof:epub-en passed (10/10)"` を実行
 
 ## 注意
 

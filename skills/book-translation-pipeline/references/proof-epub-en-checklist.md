@@ -1,6 +1,6 @@
-# Proof:EPUB-EN 8 項目チェックリスト
+# Proof:EPUB-EN 10 項目チェックリスト
 
-EPUB → Markdown 抽出結果 (`docs/en/*.md`) の構造校正用 8 項目。`Proof-EPUB-EN Agent` が使用する。
+EPUB → Markdown 抽出結果 (`docs/en/*.md`) の構造校正用 10 項目。`Proof-EPUB-EN Agent` が使用する。
 
 ## 観点
 
@@ -130,6 +130,30 @@ node scripts/check-links.mjs                            # 死リンク検出 (er
 - nested div が原因で extract が拾えない id (章冒頭 figure / 深い sidebar 内 example 等) は `scripts/inject-anchors.mjs` で補完
 - `extract-epub.mjs` 自体のロジックに改善余地がある場合は (例: `<table>` の placeholder 化が効いていない) follow-up チケットを起票
 
+### 10. コードブロック断片化検出
+
+EPUB の sidebar/Note 内 `<pre class="skip">` には syntax highlighting 用に各トークンが個別 `<code>` 要素として並んでいることがある (O'Reilly 系で頻発)。`extract-epub.mjs` の `convertOReillyNote` で `<p>` regex に word boundary がないと `<pre>` まで誤マッチし、各 `<code>` が個別バッククォートに展開されて以下のような断片化が起きる:
+
+```
+> `def` `allocate``(``line``:` `OrderLine``,` `repo``:` `AbstractRepository``)` `->` `str``:`
+```
+
+**自動検出**:
+
+```bash
+node scripts/check-code-fragments.mjs docs/en/*.md
+```
+
+exit 1 / 検出ありの場合:
+
+- 検出された行を EPUB 内の対応 XHTML で確認 (`unzip -p docs/<book>.epub OEBPS/<file>.html | grep -A2 <近傍テキスト>`)
+- 元構造が `<pre>...<code>...</code></pre>` であれば、本来 fenced code block (` ```language ``` `) として抽出されるはず
+- `extract-epub.mjs` の `convertOReillyNote` (regex `<p\b[^>]*>`) と `<pre>` 子要素対応を確認
+
+代表的なバグパターン:
+- `convertOReillyNote` の child regex が `<p[^>]*>` のままで `<pre>` を誤マッチ → `<p\b[^>]*>` に修正
+- sidebar/Note 内 `<pre>` が child iteration の対象から漏れている → `<p|pre|ul|ol>` の alternation に追加
+
 ## 進め方
 
 1. `docs/en/<file>.md` を冒頭から末尾まで通読
@@ -137,4 +161,4 @@ node scripts/check-links.mjs                            # 死リンク検出 (er
 3. 軽微な問題は直接 `docs/en/<file>.md` を修正
 4. 構造的不具合は `extract-epub.mjs` 改修 follow-up チケットを起票
 5. 修正観点と件数を bd notes に記録 (例: `"#3 missing image: foo.jpg, #5 figurecaption 3件追加, #8 watermark 2行除去, #9 anchor 漏れ 4件 inject"`)
-6. `bd close <ticket_id> --reason "proof:epub-en passed (9/9)"` を実行
+6. `bd close <ticket_id> --reason "proof:epub-en passed (10/10)"` を実行
