@@ -14,7 +14,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `apm.yml` — APM マニフェスト (`includes: skills/**`)
   - `.waza.yaml` — waza の token budget 定義
   - `.github/workflows/waza-eval.yml` — CI ゲート
-  - `.claude-plugin/marketplace.json` — Claude Code Plugin Marketplace 定義
 
 このリポジトリは **producer (skill を作って配る側)** であり、`apm.yml` の `dependencies` は空 (`apm: []`, `mcp: []`)。consumer 側のインストール手順は README に書いてある。**プロジェクト内の `apm install` はしない** (この repo は user-scope install 専用、`apm.lock.yaml` / `apm_modules/` / `.claude/skills/` は `.gitignore` 済)。
 
@@ -22,7 +21,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | ツール | バージョン | 実体 | 役割 |
 |---|---|---|---|
-| **apm** | 0.12.2 | `/opt/homebrew/bin/apm` | skill / instruction / MCP の配布 (compile / pack / audit / marketplace) |
+| **apm** | 0.12.2 | `/opt/homebrew/bin/apm` | skill / instruction / MCP の配布 (compile / pack / audit) |
 | **waza** | 0.33.0 | `~/bin/waza` | skill の品質ゲート (compliance check / token budget / eval) |
 
 両ツールは補完関係: apm = **配布**、waza = **品質ゲート**。詳細は本ファイル末尾の「詳細ドキュメント」節を参照。
@@ -40,8 +39,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `apm pack --target claude --archive` | リリース用 `.tar.gz` 生成 (`build/` 配下) |
 | `apm audit` | hidden Unicode / drift / lockfile 検査 |
 | `apm audit --strip --dry-run` → `apm audit --strip` | hidden 文字の除去 (プレビュー → 実行) |
-| `apm marketplace check` | `.claude-plugin/marketplace.json` の resolvable 検証 |
-| `apm marketplace validate <path>` | marketplace manifest 単体検証 |
 
 ### CLI バージョン更新の罠
 
@@ -217,22 +214,10 @@ apm audit                                  # hidden Unicode 検査
 
 要約はユーザ目線で「何を作るか / 何を解決するか」を 1 文。既存行と同じトーン (動詞始まり、体言止め) に揃える。
 
-### 6. `.claude-plugin/marketplace.json` の更新 (**必須**)
-
-`plugins[0].skills` 配列に新しい skill のパスを追加:
-
-```json
-"skills": [
-  "./skills/book-translation-pipeline",
-  ...
-  "./skills/<name>"
-]
-```
-
-### 7. コミット
+### 6. コミット
 
 ```bash
-git add skills/<name>/ evals/<name>/ README.md .claude-plugin/marketplace.json
+git add skills/<name>/ evals/<name>/ README.md
 git commit -m "feat: add <name> skill"
 ```
 
@@ -267,10 +252,10 @@ waza run <name> --output-dir updated -v
 # baseline と updated の results を比較 (regression がないか)
 ```
 
-### 4. apm 側の検査 (削除・rename 時のみ重要)
+### 4. 削除・rename 時の追加作業
 
-- **削除**: `skills/<name>/` と `evals/<name>/` を両方削除 → README.md table 行を削除 → `marketplace.json` から `./skills/<name>` を削除。
-- **rename**: ディレクトリ rename → SKILL.md の `name:` 更新 → README.md と `marketplace.json` を更新 → `evals/<name>/` も rename。
+- **削除**: `skills/<name>/` と `evals/<name>/` を両方削除 → README.md table 行を削除。
+- **rename**: ディレクトリ rename → SKILL.md の `name:` 更新 → README.md を更新 → `evals/<name>/` も rename。
 
 ### 5. README.md の更新判断
 
@@ -311,11 +296,11 @@ skill 編集と **同一コミット** で README.md を更新すべきケース
 | orphaned reference | SKILL.md から `[link](./references/<file>.md)` で参照を張る (もしくは不要なら削除) |
 | advisory regression | `waza dev <name> --target high` で frontmatter / 本文構造を改善 |
 
-### リリース手順 (marketplace 公開)
+### リリース手順
 
 ```bash
 # 1. version bump
-# apm.yml の version: と .claude-plugin/marketplace.json の metadata.version を更新
+# apm.yml の version: を更新
 
 # 2. bundle 生成 (preview)
 apm pack --dry-run
@@ -324,10 +309,7 @@ apm pack --dry-run
 apm pack --target claude --archive
 # → build/<name>.tar.gz
 
-# 4. marketplace 検証
-apm marketplace check
-
-# 5. tag & GitHub release
+# 4. tag & GitHub release
 git tag v<version>
 git push origin v<version>
 gh release create v<version> build/*.tar.gz

@@ -1,6 +1,6 @@
 # skills
 
-[anthropics/skills](https://github.com/anthropics/skills) のレイアウト規約に倣った skill 集を、[APM (Agent Package Manager)](https://microsoft.github.io/apm/) で配布する repository。**agent 非依存**で書いてあり、Claude Code / Codex CLI / その他 [agents.md](https://agents.md/) 標準対応エージェントで利用できる。Claude Code Plugin Marketplace 経由のインストールにも対応。
+[anthropics/skills](https://github.com/anthropics/skills) のレイアウト規約に倣った skill 集を、[APM (Agent Package Manager)](https://microsoft.github.io/apm/) で配布する repository。**agent 非依存**で書いてあり、Claude Code / Codex CLI / その他 [agents.md](https://agents.md/) 標準対応エージェントで利用できる。
 
 ## 管理対象 skill
 
@@ -35,17 +35,6 @@ apm install -g ymdvsymd/skills --target agent-skills
 
 APM CLI 自体のインストール、対応 platform (`claude` / `copilot` / `cursor` / `codex` / `gemini` / `windsurf` / `opencode` / `agent-skills`)、その他オプションは [APM 公式ドキュメント](https://microsoft.github.io/apm/) 参照。
 
-### Claude Code Plugin Marketplace
-
-Claude Code 内で:
-
-```
-/plugin marketplace add ymdvsymd/skills
-/plugin install ymdvsymd-skills@ymdvsymd-skills
-```
-
-`.claude-plugin/marketplace.json` が plugin 定義を提供する。
-
 ## 構成
 
 [anthropics/skills](https://github.com/anthropics/skills) と同じ top-level `skills/` レイアウト:
@@ -53,8 +42,6 @@ Claude Code 内で:
 ```
 .
 ├── apm.yml                          APM manifest (targets: claude, codex, agent-skills)
-├── .claude-plugin/
-│   └── marketplace.json             Claude Code Plugin Marketplace 定義
 ├── README.md
 ├── .gitignore                       apm.lock.yaml, .claude/skills/, ローカル設定を除外
 ├── evals/                           waza project-mode の eval スイート (skill ごとに 1 ディレクトリ)
