@@ -78,21 +78,4 @@ Claude Code 内で:
     └── worksample-question-generator/
 ```
 
-`SKILL.md` は [Anthropic Skills spec](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) と [agentskills.io](https://agentskills.io/) 準拠で書いてあり、Claude Code でも Codex でも description trigger が機能する。Claude 固有の orchestration (`Agent` tool による subagent spawn 等) は SKILL.md 内で明示的に注記してあり、他 agent では inline prompt として読み替える指針も併記している。
-
-`skills/<name>/` を編集 → `git push` した内容は、利用者側が `apm install -g ymdvsymd/skills --update --target <target>` で取得する。
-
-## Eval
-
-`evals/<skill>/` は [waza](https://github.com/anthropics/waza) project-mode の eval スイート。各 skill ディレクトリは `eval.yaml` (suite 設定) と `tasks/*.yaml` (task 定義) を持つ。
-
-```bash
-waza run <skill名>
-```
-
-ローカル固有のパス / PII を含む task は `${VAR}` placeholder + gitignored `.env.local` で扱う。該当する skill のディレクトリには `.env.local.example` と README を置いてある:
-
-- [`evals/tech-blog-from-docs/`](./evals/tech-blog-from-docs/README.md) — `${APM_DOCS_DIR}` (microsoft/apm の docs パス)
-- [`evals/worksample-question-generator/`](./evals/worksample-question-generator/README.md) — `${WAZA_TASK_FILES}` / `${WAZA_ANSWER_FILES}` (採用課題と応募者回答のパス)
-
-`.gitignore` で `evals/*/.env.local` と `evals/*/tasks/*.local.yaml` をブロックしているので、`.env.local` の誤コミットは防がれる。
+`SKILL.md` は [Anthropic Skills spec](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) と [agentskills.io](https://agentskills.io/) 準拠で書いてあり、Claude Code / Codex CLI / GitHub Copilot CLI のいずれでも description trigger が機能する。Claude 固有の orchestration (`Agent` tool による subagent spawn 等) は SKILL.md 内で明示的に注記してあり、他 agent では inline prompt として読み替える指針も併記している。
