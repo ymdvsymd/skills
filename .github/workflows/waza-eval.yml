@@ -41,7 +41,7 @@ jobs:
         run: waza check
 
       - name: waza run (mock executor)
-        run: waza run --output results.json --verbose
+        run: waza run --output-dir results --transcript-dir transcripts --verbose
 
       - name: Upload results artifact
         if: always()
@@ -49,7 +49,7 @@ jobs:
         with:
           name: waza-evaluation-results
           path: |
-            results.json
+            results/
             transcripts/
           retention-days: 30
           if-no-files-found: warn
