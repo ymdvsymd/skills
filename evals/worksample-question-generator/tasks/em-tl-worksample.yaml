@@ -1,0 +1,37 @@
+id: worksample-question-generator-em-tl-worksample
+name: "em-tl-worksample"
+tags:
+  - "imported"
+  - "em-tl-worksample"
+
+inputs:
+  prompt: |-
+    採用面接の準備をしている。次の課題と応募者の事前回答を読んで、面接当日に深掘りすべき質問を整理して出力してほしい。
+
+    課題ファイル:
+    ${WAZA_TASK_FILES}
+
+    応募者の回答ファイル:
+    ${WAZA_ANSWER_FILES}
+
+expected:
+  outcomes:
+    - type: task_completed
+  # Imported from legacy evals.json. Assertions below are
+  # human-review only; convert to graders (output_contains,
+  # regex, etc.) when wiring up real automated evaluation.
+  output_contains: []
+  behavior:
+    max_tool_calls: 100
+
+# Original human-review assertions:
+#   - 出力ファイルが ${WAZA_TASK_FILES} と同じディレクトリ配下に保存されている
+#   - 出力ファイルの中身に Q1, Q2, Q3, Q4 の4つの問いに対応する深掘り質問のセクションが揃っている
+#   - Q1 にはシノニム辞書の構築プロセスを問う質問が含まれている
+#   - Q1 には真贋判定について競合がどう対応しているかを問う質問が含まれている
+#   - Q2 には MVP scope と優先順位の整合性に関する深掘り質問が含まれている
+#   - Q2 には出品体験の代替アクション (一括出品 / 価格サジェスト / 再出品サジェストなど) への示唆が含まれている
+#   - Q3 にはデータスキーマ設計の判断根拠や省略の妥当性に関する深掘り質問が含まれている
+#   - Q4 にはワイヤーフレーム選択と MVP 優先順位の整合性に関する深掘り質問が含まれている
+#   - 質問の文体が口語的で、賞賛だけで終わっていない (批判的に深掘りしている)
+#   - 1つの問いに対して2〜5個程度に質問が絞られている (60分の面接で消化可能な量)

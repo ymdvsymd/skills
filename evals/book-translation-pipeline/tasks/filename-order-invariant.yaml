@@ -1,0 +1,23 @@
+id: book-translation-pipeline-filename-order-invariant
+name: "filename-order-invariant"
+tags:
+  - "imported"
+
+inputs:
+  prompt: "docs/en と docs/ja のmdファイル名順序が、EPUBの章立てと同じソート順になるようにしたい。どう設計すればいい?"
+
+expected:
+  outcomes:
+    - type: task_completed
+  # Imported from legacy evals.json. Assertions below are
+  # human-review only; convert to graders (output_contains,
+  # regex, etc.) when wiring up real automated evaluation.
+  output_contains: []
+  behavior:
+    max_tool_calls: 100
+
+# Original human-review assertions:
+#   - spine順 == NNプレフィックス順 == ASCIIソート順 という不変条件が示される
+#   - extract-epub.mjs の FILENAME_MAP で spine の key を NN_*.md に採番する仕組みが説明される
+#   - en/ と ja/ で同じ NN プレフィックスを使う原則が示される
+#   - ja 側の補助ファイルは _ プレフィックスで区別する原則が示される

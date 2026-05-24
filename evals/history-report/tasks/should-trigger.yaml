@@ -1,0 +1,14 @@
+id: history-report-should-trigger-001
+name: "history-report should trigger on canonical prompt"
+tags:
+  - "should-trigger"
+  - "placeholder"
+
+inputs:
+  prompt: "<TODO: insert a prompt that should invoke the history-report skill>"
+
+expected:
+  outcomes:
+    - type: task_completed
+  behavior:
+    max_tool_calls: 100

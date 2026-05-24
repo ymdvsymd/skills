@@ -1,0 +1,14 @@
+id: sync-with-origin-main-should-trigger-001
+name: "sync-with-origin-main should trigger on canonical prompt"
+tags:
+  - "should-trigger"
+  - "placeholder"
+
+inputs:
+  prompt: "<TODO: insert a prompt that should invoke the sync-with-origin-main skill>"
+
+expected:
+  outcomes:
+    - type: task_completed
+  behavior:
+    max_tool_calls: 100

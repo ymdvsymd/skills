@@ -1,0 +1,24 @@
+id: book-translation-pipeline-init-new-project
+name: "init-new-project"
+tags:
+  - "imported"
+
+inputs:
+  prompt: |-
+    新しい技術書のEPUB (foo.epub) があって、これを日本語訳したい。プロジェクトを ~/oss/foo-ja-translation に立ち上げて、最初のステップを教えて。
+
+expected:
+  outcomes:
+    - type: task_completed
+  # Imported from legacy evals.json. Assertions below are
+  # human-review only; convert to graders (output_contains,
+  # regex, etc.) when wiring up real automated evaluation.
+  output_contains: []
+  behavior:
+    max_tool_calls: 100
+
+# Original human-review assertions:
+#   - 5フェーズ (setup→proof:epub-en→translation→proof:en-ja→final) が説明されている
+#   - init-project.sh または book-translation-pipeline skill の使用が案内されている
+#   - extract-epub.mjs の CONFIG を埋める旨が示されている
+#   - docs/{en,ja} 構造が示されている

@@ -1,0 +1,14 @@
+id: usage-guide-should-trigger-001
+name: "usage-guide should trigger on canonical prompt"
+tags:
+  - "should-trigger"
+  - "placeholder"
+
+inputs:
+  prompt: "<TODO: insert a prompt that should invoke the usage-guide skill>"
+
+expected:
+  outcomes:
+    - type: task_completed
+  behavior:
+    max_tool_calls: 100

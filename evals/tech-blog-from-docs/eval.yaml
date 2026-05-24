@@ -1,0 +1,23 @@
+# Auto-generated waza eval scaffold for tech-blog-from-docs.
+# Replace executor: mock with copilot-sdk (or another) for real evaluation.
+name: tech-blog-from-docs-eval
+description: Initial mock-executor eval suite for the tech-blog-from-docs skill.
+skill: tech-blog-from-docs
+version: "0.1"
+
+config:
+  trials_per_task: 1
+  timeout_seconds: 300
+  parallel: false
+  executor: mock
+  model: claude-sonnet-4-6
+
+graders:
+  - type: code
+    name: has_output
+    config:
+      assertions:
+        - "len(output) >= 0"
+
+tasks:
+  - "tasks/*.yaml"

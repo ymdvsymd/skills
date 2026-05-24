@@ -1,0 +1,23 @@
+id: book-translation-pipeline-automated-orchestration-loop
+name: "automated-orchestration-loop"
+tags:
+  - "imported"
+
+inputs:
+  prompt: "DMRB-Vol4 の翻訳プロジェクトを始めたい。あとは AI に任せて自動進行させたい。"
+
+expected:
+  outcomes:
+    - type: task_completed
+  # Imported from legacy evals.json. Assertions below are
+  # human-review only; convert to graders (output_contains,
+  # regex, etc.) when wiring up real automated evaluation.
+  output_contains: []
+  behavior:
+    max_tool_calls: 100
+
+# Original human-review assertions:
+#   - init-project.sh → extract-epub → gen-tickets → オーケストレーションループの順が案内される
+#   - bd ready ループで Agent tool が translation/proof:epub-en/proof:en-ja の各 subagent を spawn することが説明される
+#   - 中断時は bd 上の状態が真実のソースで、再開可能であることが説明される
+#   - setup s2/s3 (用語集・スタイルガイド) は人間レビューを挟むか自走するかについて言及される

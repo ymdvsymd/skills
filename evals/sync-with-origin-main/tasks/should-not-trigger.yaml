@@ -1,0 +1,14 @@
+id: sync-with-origin-main-should-not-trigger-001
+name: "sync-with-origin-main should NOT trigger on unrelated prompt"
+tags:
+  - "should-not-trigger"
+  - "placeholder"
+
+inputs:
+  prompt: "<TODO: insert an unrelated prompt that must not invoke this skill>"
+
+expected:
+  outcomes:
+    - type: task_completed
+  behavior:
+    max_tool_calls: 100

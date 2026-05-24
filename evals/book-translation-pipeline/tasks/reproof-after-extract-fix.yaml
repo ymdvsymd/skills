@@ -1,0 +1,22 @@
+id: book-translation-pipeline-reproof-after-extract-fix
+name: "reproof-after-extract-fix"
+tags:
+  - "imported"
+
+inputs:
+  prompt: "extract-epub.mjs のバグを直したので、すでに翻訳済みの章を再校正するチケットを起票したい。どうすればいい?"
+
+expected:
+  outcomes:
+    - type: task_completed
+  # Imported from legacy evals.json. Assertions below are
+  # human-review only; convert to graders (output_contains,
+  # regex, etc.) when wiring up real automated evaluation.
+  output_contains: []
+  behavior:
+    max_tool_calls: 100
+
+# Original human-review assertions:
+#   - 独立 epic として起票するよう案内される (既存 epic に追加しない)
+#   - ラベル proof:epub-en-v2 など版番号付きラベルが提案される
+#   - reproof-pattern.md または DMRB-Vol1 v2/v3 の例が参照される

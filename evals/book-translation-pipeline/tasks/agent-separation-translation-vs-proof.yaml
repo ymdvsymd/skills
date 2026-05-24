@@ -1,0 +1,23 @@
+id: book-translation-pipeline-agent-separation-translation-vs-proof
+name: "agent-separation-translation-vs-proof"
+tags:
+  - "imported"
+
+inputs:
+  prompt: "翻訳作業を AI に任せるけど、同じ AI が校正もすると確認バイアスがかかると思う。どう設計すればいい?"
+
+expected:
+  outcomes:
+    - type: task_completed
+  # Imported from legacy evals.json. Assertions below are
+  # human-review only; convert to graders (output_contains,
+  # regex, etc.) when wiring up real automated evaluation.
+  output_contains: []
+  behavior:
+    max_tool_calls: 100
+
+# Original human-review assertions:
+#   - Translation Agent と Proof-EN-JA Agent を別 subagent で spawn することが案内される
+#   - コンテキスト分離が品質の前提という説明がある
+#   - skill 内 agents/*.md の prompt template が参照される
+#   - Agent tool で subagent_type='general-purpose' を呼ぶ実装パターンが示される

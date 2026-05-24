@@ -1,0 +1,24 @@
+id: book-translation-pipeline-github-pages-deploy
+name: "github-pages-deploy"
+tags:
+  - "imported"
+
+inputs:
+  prompt: "VitePress サイトを GitHub Pages に自動デプロイしたい。GitHub Actions の設定はどうすればいい?"
+
+expected:
+  outcomes:
+    - type: task_completed
+  # Imported from legacy evals.json. Assertions below are
+  # human-review only; convert to graders (output_contains,
+  # regex, etc.) when wiring up real automated evaluation.
+  output_contains: []
+  behavior:
+    max_tool_calls: 100
+
+# Original human-review assertions:
+#   - .github/workflows/deploy.yml の利用が案内される
+#   - actions-gh-pages または同等のデプロイ手段が提案される
+#   - main/master 両ブランチ対応か、ブランチ選択について言及される
+#   - publish_dir に docs/.vitepress/dist が指定されること
+#   - vitepress-config.mts の base path 設定について案内される

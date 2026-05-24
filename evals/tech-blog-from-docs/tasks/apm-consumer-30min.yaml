@@ -1,0 +1,14 @@
+id: tech-blog-from-docs-apm-consumer-30min
+name: "apm-consumer-30min"
+tags:
+  - "imported"
+
+inputs:
+  prompt: |-
+    技術ブログ記事として 30 分で読める日本語の解説記事を書きたい。社内勉強会で発表する。ソースは ${APM_DOCS_DIR}/consumer/ にある md ファイル群（APM をコンシューマー = 利用者として使う側のガイド）。読者は Claude Code 等の AI コーディングエージェントを日常的に使うソフトウェアエンジニア全員（MCP / Skills 等の基礎概念の説明は不要）。why / what / how の3部構成で、実利重視で手を動かせる記事にしてほしい（コードと使い方の例が中心）。社内文脈は織り込まず純粋な技術記事として。
+
+expected:
+  outcomes:
+    - type: task_completed
+  behavior:
+    max_tool_calls: 100

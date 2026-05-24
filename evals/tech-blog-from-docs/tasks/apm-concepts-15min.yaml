@@ -1,0 +1,14 @@
+id: tech-blog-from-docs-apm-concepts-15min
+name: "apm-concepts-15min"
+tags:
+  - "imported"
+
+inputs:
+  prompt: |-
+    テクノ場（社内勉強会）の発表資料を 15 分で読める日本語の技術ブログ記事として書きたい。スライドではなく読み物が良い。ソースとなるドキュメントは ${APM_DOCS_DIR}/concepts/ にあるmdファイル群（APM = Agent Package Manager のコンセプト解説）。読者は Claude Code / Cursor / Copilot を日常的に使うソフトウェアエンジニアで全員。why（なぜこのツールが必要か）/ what（要するに何か。プリミティブは重要な論点）/ how（具体どう使うか）の3部構成で、本質的なメンタルモデルを伝えてほしい。社内固有事情は触れず純粋な技術記事として書く。トーンは思想・設計判断と手を動かすセクションのバランス型。
+
+expected:
+  outcomes:
+    - type: task_completed
+  behavior:
+    max_tool_calls: 100
