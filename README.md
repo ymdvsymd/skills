@@ -22,6 +22,9 @@ apm install -g ymdvsymd/skills --target claude
 # Codex CLI 用 (~/.agents/skills/ — Codex は agent-skills 共通配置を読む)
 apm install -g ymdvsymd/skills --target codex
 
+# GitHub Copilot CLI 用 (~/.agents/skills/ — Copilot は agent-skills 共通配置を読む)
+apm install -g ymdvsymd/skills --target copilot
+
 # Cross-client 共通配置 (~/.agents/skills/) — Cursor / Copilot / OpenCode / Gemini 等
 apm install -g ymdvsymd/skills --target agent-skills
 ```

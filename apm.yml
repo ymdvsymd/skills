@@ -15,6 +15,7 @@ keywords:
 targets:
   - claude
   - codex
+  - copilot
   - agent-skills
 dependencies:
   apm: []
