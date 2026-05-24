@@ -4,13 +4,13 @@
     "name": "ymdvsymd"
   },
   "metadata": {
-    "description": "ymdvsymd's agent-agnostic skills (book translation, repo docs, Git workflow, recruitment interview)",
+    "description": "ymdvsymd's agent-agnostic skills (book translation, repo docs, Git workflow, worksample interview prep)",
     "version": "0.1.0"
   },
   "plugins": [
     {
       "name": "ymdvsymd-skills",
-      "description": "Book translation pipeline, history-report, usage-guide, sync-with-origin-main, recruitment-interview-question-generator",
+      "description": "Book translation pipeline, history-report, usage-guide, sync-with-origin-main, worksample-question-generator",
       "source": "./",
       "strict": false,
       "skills": [
@@ -18,7 +18,7 @@
         "./skills/history-report",
         "./skills/usage-guide",
         "./skills/sync-with-origin-main",
-        "./skills/recruitment-interview-question-generator"
+        "./skills/worksample-question-generator"
       ]
     }
   ]
