@@ -123,36 +123,71 @@ NG: 言語指定なしの fenced code block。
 
 ## 図とダイアグラム
 
-### Mermaid vs ASCII art
+### 図は Mermaid で書く
 
-判断基準：**そのテキストが最終的にどこで render されるか**
+技術ブログ記事の図は **Mermaid コードブロック** で書く。理由：
 
-- **Markdown ファイル単体（GitHub / VS Code / mintlify で render される前提）** → Mermaid 可
-- **console / terminal / Claude Code の応答で読まれる可能性がある** → **ASCII art 必須**
+- GitHub / VS Code / mintlify など主要な Markdown レンダラで自動的に図に変換される
+- バージョン管理しやすい（テキストなので diff が読める）
+- ASCII art は等幅フォント前提なので、プロポーショナルフォントで render されると崩れる
 
-技術ブログ記事は **多くの場合 console や IDE のプレビューで読まれる** ため、原則 ASCII art を使う。
+ASCII art は使わない。ディレクトリツリーで罫線文字 `├ │ └` を並べたくなる気持ちはわかるが、Mermaid の `graph` または `flowchart` で代替する。
 
-### ASCII art の書き方
+### Mermaid の基本パターン
 
-```text
-GitHub Organization: acme
-├─ Repository: acme/.github           ← 組織共有設定リポジトリ
-│   └─ apm-policy.yml                  ← APM が見に行く 1 ファイル
-│
-├─ Repository: acme/web-app           ← 個別プロジェクト
-│   ├─ apm.yml
-│   └─ apm.lock.yaml
-│
-└─ Repository: acme/api-server        ← 個別プロジェクト
-    ├─ apm.yml
-    └─ apm.lock.yaml
+**組織 / リポジトリ構造（graph TB）**:
+
+````markdown
+```mermaid
+graph TB
+  Org[GitHub Organization:<br>acme]
+  GH[Repository:<br>acme/.github<br>apm-policy.yml]
+  WebApp[Repository:<br>acme/web-app<br>apm.yml + apm.lock.yaml]
+  API[Repository:<br>acme/api-server<br>apm.yml + apm.lock.yaml]
+  Org --> GH
+  Org --> WebApp
+  Org --> API
+  GH -.policy fetch.-> WebApp
+  GH -.policy fetch.-> API
+```
+````
+
+**ライフサイクル / 状態遷移（graph LR）**:
+
+````markdown
+```mermaid
+graph LR
+  Init[init] --> Install[install]
+  Install --> Compile[compile]
+  Compile --> Run[run]
+  Run --> Audit[audit]
+  Audit -.fix drift.-> Install
+```
+````
+
+### 改行は `<br>` で行う（Mermaid の仕様）
+
+Mermaid のノードラベル内で改行したいとき、`\n` ではなく **`<br>`** を使う：
+
+```mermaid
+graph TB
+  A[Title:<br>second line<br>third line]
 ```
 
-罫線文字: `├` `─` `│` `└` `→` `▼` `←` `↑` `↓` を使う。半角文字との混在では幅がずれることがあるので、各行を等幅で書く。
+`\n` は Mermaid の多くのレンダラで正しく改行されない。`<br>` が事実上の標準。
+
+### 図の中で日本語ラベルを使うとき
+
+日本語の場合も `<br>` で改行する。スペース区切りで折り返したいときは明示的に `<br>` を入れる：
+
+```mermaid
+graph TB
+  A[Repository: acme/.github<br>組織共有設定<br>apm-policy.yml]
+```
 
 ### 表は Markdown table
 
-ASCII art の罫線で表を書かない。Markdown table が console でも揃って読める：
+罫線文字で表を書かない。Markdown table が GitHub / VS Code / console すべてで揃って読める：
 
 ```markdown
 | カラム 1 | カラム 2 |

@@ -125,13 +125,49 @@ def check_fenced_code_lang(text: str) -> dict:
     }
 
 
-def check_no_mermaid(text: str) -> dict:
-    """No mermaid code blocks (use ASCII art instead per skill convention)."""
-    found = re.search(r"^```mermaid", text, re.MULTILINE)
+def check_has_mermaid(text: str) -> dict:
+    """At least one mermaid code block is present (skill convention: Mermaid for diagrams)."""
+    blocks = re.findall(r"^```mermaid", text, re.MULTILINE)
+    has = len(blocks) > 0
     return {
-        "name": "no_mermaid",
-        "passed": not found,
-        "evidence": "no mermaid blocks" if not found else "mermaid block detected",
+        "name": "has_mermaid_diagram",
+        "passed": has,
+        "evidence": f"{len(blocks)} mermaid block(s) found" if has else "no mermaid block",
+    }
+
+
+def check_no_ascii_tree(text: str) -> dict:
+    """ASCII tree characters (├ │ └) are NOT used for diagrams (use Mermaid instead)."""
+    matches = re.findall(r"[├│└]", text)
+    has = len(matches) > 0
+    return {
+        "name": "no_ascii_tree",
+        "passed": not has,
+        "evidence": "no ASCII tree characters" if not has else f"{len(matches)} ASCII tree character(s) detected — use Mermaid instead",
+    }
+
+
+def check_mermaid_uses_br(text: str) -> dict:
+    """Inside mermaid blocks, line breaks in node labels must use <br>, not \\n."""
+    # Extract content of all mermaid blocks
+    blocks = re.findall(r"```mermaid\n(.*?)\n```", text, re.DOTALL)
+    if not blocks:
+        # No mermaid blocks; this check is N/A but treat as PASS to avoid double-penalty
+        return {
+            "name": "mermaid_uses_br",
+            "passed": True,
+            "evidence": "no mermaid blocks (N/A)",
+        }
+    violations = []
+    for i, block in enumerate(blocks):
+        # Find \n inside node-label contexts: [label\n...] or "label\n..."
+        if re.search(r"\\n", block):
+            violations.append(f"block #{i+1}: contains literal '\\n' — should be '<br>'")
+    passed = not violations
+    return {
+        "name": "mermaid_uses_br",
+        "passed": passed,
+        "evidence": "all line breaks use <br>" if passed else f"{len(violations)}: {violations[:3]}",
     }
 
 
@@ -142,16 +178,6 @@ def check_has_markdown_table(text: str) -> dict:
         "name": "has_markdown_table",
         "passed": has_table,
         "evidence": "table found" if has_table else "no markdown table",
-    }
-
-
-def check_has_ascii_art(text: str) -> dict:
-    """At least one ASCII tree character (├ │ └) is used."""
-    found = bool(re.search(r"[├│└]", text))
-    return {
-        "name": "has_ascii_art",
-        "passed": found,
-        "evidence": "ASCII tree found" if found else "no ASCII tree characters",
     }
 
 
@@ -186,9 +212,10 @@ def main() -> int:
         check_why_what_how(text),
         check_ru_go(text),
         check_fenced_code_lang(text),
-        check_no_mermaid(text),
+        check_has_mermaid(text),
+        check_no_ascii_tree(text),
+        check_mermaid_uses_br(text),
         check_has_markdown_table(text),
-        check_has_ascii_art(text),
         check_terminology_mentions(text, args.terms, args.min_term_count),
     ]
 
