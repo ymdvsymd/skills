@@ -86,3 +86,17 @@ WebFetch で取得する。記事 1 本程度なら直接 Read。複数ページ
 ## 調査完了後
 
 調査結果（コマンド例・YAML 例・概念定義）を、執筆 phase で引用しやすい形でメモしておく。subagent からの返答は **そのまま記事に貼り付けない**（記事のトーンと文体に合わない）。あくまで素材として咀嚼してから執筆する。
+
+### 重要: subagent の返答は素材であり、ソースではない
+
+**subagent はハルシネーションする可能性がある**。固有のコマンド名・フラグ名・YAML フィールド名・数値・出力例を、ソース doc に書かれていないにも関わらず、もっともらしく作り出してしまうことがある。
+
+本スキルの過去事例:
+
+- subagent が `waza dev evals/.../eval.yaml --model claude-sonnet-...` と書いて報告したが、実際の `waza dev` は `[skill-path]` を引数に取り、`--model` は `--copilot` 非対話モード限定だった
+- subagent が `waza compare --format detailed` というフラグを報告したが、実際の `--format` の値は `table` / `json` のみで `detailed` は存在しない
+- subagent が「グレーダーは 11 種類」と報告したが、実際は `not implemented` マーク付きの除外計算で 12 種類だった (この事例は逆方向で、subagent の誤判定により記事の正しい記述が疑われた)
+
+**Phase 5b (Fact Check) では subagent レポートではなく、必ず一次ソース** (引数で指定された md ファイル) を直接 grep して裏付けを確認すること。特に CLI コマンド・フラグ・数値・YAML フィールド・JSON 出力例は subagent 報告の中でハルシネーションが起こりやすい高リスク領域である。
+
+Phase 2 で subagent から受け取った素材を執筆に流し込むときも、可能なら執筆と並行して `grep -rn 'waza dev' <source-dir>/` のような一次ソース確認をその場で行うのが理想。少なくとも Phase 5b では必ず確認する。
