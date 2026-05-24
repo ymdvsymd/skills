@@ -144,7 +144,7 @@ git log --oneline -3
 
 報告のテンプレートは下記「Output Format」参照。
 
-## Safety Rails
+## Safety Rails (Troubleshooting)
 
 このスキルが**してはいけないこと**:
 

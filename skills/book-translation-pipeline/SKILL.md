@@ -356,3 +356,16 @@ orchestrator は `scripts/claim-next-ticket.sh` を使うと race condition な�
 ## skill の独立性
 
 この skill は**自己完結**している。`scripts/`, `references/`, `assets/`, `agents/` のすべての作業に必要なコンテンツが skill ディレクトリ内に揃っているため、ユーザーの環境に過去の翻訳プロジェクトが**存在しなくても動作する**。SKILL.md 内に出てくる書籍タイトルや既存プロジェクト名は、ユーザーが「同種のプロジェクト経験を想起する」ためのキーワードに過ぎず、skill 動作の前提ではない。
+
+## Examples
+
+代表ケースは既存セクションに集約されている:
+
+- **新規プロジェクト立ち上げ** — `## Step-by-step` の「### 初回 (新規プロジェクト)」
+- **中断セッションからの復帰** — `## Step-by-step` の「### 中断・再開時」
+- **extract-epub.mjs 改修後の再校正バッチ** — [references/reproof-pattern.md](references/reproof-pattern.md)
+
+## Troubleshooting
+
+- **Note:** translation / proof は別 subagent で実行する (確認バイアス回避)。詳細は `agents/translation-agent.md`, `agents/proof-en-ja-agent.md`, `agents/proof-epub-en-agent.md`
+- **Important:** rate limit 復帰や長セッション再開で取りこぼした場合は `bd ready` で再開できる。失敗時の調査は `## Detailed references` を参照

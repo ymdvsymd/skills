@@ -81,7 +81,7 @@ description: >-
 
 詳しい指示テンプレは [references/source-research.md](references/source-research.md) を読む。
 
-### Phase 3: Article Structure（記事構成）
+### Example — Phase 3: Article Structure（記事構成）
 
 **why → what → how の 3 部構成** で固定。これは技術記事として最も汎用性が高い構造で、本スキルはこのテンプレに沿って書く：
 
@@ -179,7 +179,7 @@ description: >-
 - 記事の章構成（章タイトルの箇条書き）
 - 設計判断のうち、ユーザーが後で議論するかもしれないポイント（例: 「ユースケース節は 6 個にしたが、削れるなら短くできる」）
 
-## アンチパターン
+## アンチパターン (Troubleshooting)
 
 このスキルで **やってはいけない** こと：
 
