@@ -33,15 +33,14 @@ waza run worksample-question-generator
 Or set the env vars manually:
 
 ```bash
-export WAZA_TASK_FILES="  - /path/to/worksample.pdf"
-export WAZA_ANSWER_FILES="  - /path/to/answer.md
-  - /path/to/wireframe.pdf"
+export WAZA_TASK_FILES="/path/to/worksample.pdf"
+export WAZA_ANSWER_FILES="/path/to/answer.md, /path/to/wireframe.pdf"
 ```
 
 ## Env vars
 
-Both vars accept one-or-more files. Use newline-separated bullets so they
-expand cleanly into the prompt body as a markdown bullet list.
+Both vars accept one-or-more files as a single line, comma-separated
+(`, ` between paths). The string is interpolated verbatim into the prompt.
 
 - `WAZA_TASK_FILES` — worksample assignment file(s) (typically the PDF brief)
 - `WAZA_ANSWER_FILES` — candidate's response file(s) (e.g. markdown + wireframe PDF)

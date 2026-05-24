@@ -8,11 +8,8 @@ inputs:
   prompt: |-
     採用面接の準備をしている。次の課題と応募者の事前回答を読んで、面接当日に深掘りすべき質問を整理して出力してほしい。
 
-    課題ファイル:
-    ${WAZA_TASK_FILES}
-
-    応募者の回答ファイル:
-    ${WAZA_ANSWER_FILES}
+    課題ファイル (カンマ区切り): ${WAZA_TASK_FILES}
+    応募者の回答ファイル (カンマ区切り): ${WAZA_ANSWER_FILES}
 
 expected:
   outcomes:
