@@ -38,8 +38,27 @@ jobs:
           waza --version
 
       - name: waza check (compliance — advisory)
+        if: always()
         continue-on-error: true
         run: waza check
+
+      - name: waza tokens check (token budget gate)
+        run: waza tokens check --strict
+
+      - name: waza check schema + links gate
+        run: |
+          set -e
+          waza check --format json > check.json
+          if ! jq -e '[.skills[] | select(.schema.valid == false)] | length == 0' check.json > /dev/null; then
+            echo "::error::eval.yaml schema validation failed"
+            jq '.skills[] | select(.schema.valid == false) | {name, errors: .schema.evalErrors}' check.json
+            exit 1
+          fi
+          if ! jq -e '[.skills[] | select((.links.orphanedFiles // []) | length > 0)] | length == 0' check.json > /dev/null; then
+            echo "::error::orphaned reference files detected"
+            jq '.skills[] | select((.links.orphanedFiles // []) | length > 0) | {name, orphaned: .links.orphanedFiles}' check.json
+            exit 1
+          fi
 
       - name: waza run (mock executor)
         run: waza run --output-dir results --transcript-dir transcripts --verbose

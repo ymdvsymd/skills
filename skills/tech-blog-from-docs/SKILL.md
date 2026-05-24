@@ -60,7 +60,7 @@ description: >-
 3. **記事のトーン** — 実利重視（コード中心）/ 概念重視（思想・設計判断中心）/ バランス型
 4. **出力先と読了時間目安** — ファイルパスと、想定読了分数（デフォルト 30 分）
 
-詳しい質問テンプレと選択肢の文言は `references/interview-template.md` を読む。
+詳しい質問テンプレと選択肢の文言は [references/interview-template.md](references/interview-template.md) を読む。
 
 ### Phase 2: Source Research（素材調査）
 
@@ -78,7 +78,7 @@ description: >-
 
 各 subagent には「2,000〜3,000 字以内で報告、コード例・YAML 例を引用形で含めること」と明示する。
 
-詳しい指示テンプレは `references/source-research.md` を読む。
+詳しい指示テンプレは [references/source-research.md](references/source-research.md) を読む。
 
 ### Phase 3: Article Structure（記事構成）
 
@@ -118,11 +118,11 @@ description: >-
 ## 参考リンク
 ```
 
-各セクションの詳しい中身ガイドは `references/article-structure.md` を読む。
+各セクションの詳しい中身ガイドは [references/article-structure.md](references/article-structure.md) を読む。
 
 ### Phase 4: Writing（執筆）
 
-`references/japanese-writing.md` のライティングルールに従って書く。**ここで守るべき主な原則** は：
+[references/japanese-writing.md](references/japanese-writing.md) のライティングルールに従って書く。**ここで守るべき主な原則** は：
 
 - **ルー語禁止**: 英動詞をサ変動詞化しない（NG: 「gate される」「scan する」「pin する」/ OK: 「ゲートにかける」「スキャンする/検査する」「固定する」）
 - **固有名詞・術語は英語表記のまま OK**: `apm.yml`, `lockfile`, `manifest`, `primitive`, `harness`, `frontmatter` などの術語的英単語は地のままで良い
@@ -133,7 +133,7 @@ description: >-
 
 ### Phase 5: Self-Review（自己レビュー）★ 最重要
 
-書き終えた直後に、`references/self-review.md` のチェックリストを **全項目** 通す。違反を見つけたら、出力前に修正する。このフェーズの目的は **「ユーザーが指摘する前に自分で潰すこと」**。
+書き終えた直後に、[references/self-review.md](references/self-review.md) のチェックリストを **全項目** 通す。違反を見つけたら、出力前に修正する。このフェーズの目的は **「ユーザーが指摘する前に自分で潰すこと」**。
 
 本フェーズは内部で **2 段階** に分かれる:
 
@@ -165,7 +165,7 @@ description: >-
 - **subagent の研究結果はソースではない** ── 必ず一次ソース (元の md ファイル) で再確認
 - 「妥当」「現実的」「推奨」「ベスト」と書いた主観 tips がソース doc の設計意図と矛盾しないか追加確認
 
-各項目について、具体的な検出方法と修正パターンは `references/self-review.md` に書いてある。**機械的にチェックして直すこと**。「だいたい大丈夫そう」で出力しない。
+各項目について、具体的な検出方法と修正パターンは [references/self-review.md](references/self-review.md) に書いてある。**機械的にチェックして直すこと**。「だいたい大丈夫そう」で出力しない。
 
 修正したら **必ず全文を再 grep して同パターン残存が無いか確認する** ── 1 箇所だけ直して終わりにしない。
 

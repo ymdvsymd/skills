@@ -1,0 +1,13 @@
+tokens:
+  warningThreshold: 8000
+  fallbackLimit: 5000
+  limits:
+    defaults:
+      "SKILL.md": 8000
+      "references/*.md": 10000
+      "references/**/*.md": 10000
+      "agents/*.md": 3000
+      "agents/**/*.md": 3000
+      "*.md": 5000
+    overrides:
+      "README.md": 5000

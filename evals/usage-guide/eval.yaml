@@ -10,7 +10,12 @@ config:
   timeout_seconds: 300
   parallel: false
   executor: mock
-  model: claude-sonnet-4-6
+  model: claude-sonnet-4.6
+
+metrics:
+  - name: task_completion
+    weight: 1.0
+    threshold: 0.0
 
 graders:
   - type: code

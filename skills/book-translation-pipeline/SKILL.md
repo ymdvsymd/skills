@@ -44,7 +44,7 @@ description: |
         +---> Final (全 Translation + 全 Proof:EN-JA 完了後)
 ```
 
-詳細: `references/workflow-phases.md`
+詳細: [references/workflow-phases.md](references/workflow-phases.md)
 
 ## When to invoke
 
@@ -52,7 +52,7 @@ description: |
 - 既存 EPUB から日英並置 VitePress サイトを構築する
 - proof:epub-en (10 項目) / proof:en-ja (11 項目) チェックリストを参照する
 - extract-epub.mjs / gen-tickets.mjs を新書籍向けにカスタマイズする
-- extract-epub.mjs 改修後の再校正バッチを起票する (`references/reproof-pattern.md`)
+- extract-epub.mjs 改修後の再校正バッチを起票する ([references/reproof-pattern.md](references/reproof-pattern.md))
 - 中断したセッションから `bd ready` で復帰する
 
 ## 設計上の不変条件
@@ -63,7 +63,7 @@ description: |
 EPUB spine 順 == FILENAME_MAP の値の NN 順 == docs/en/ ASCII ソート順 == docs/ja/ ASCII ソート順
 ```
 
-これで `ls docs/en/` と `ls docs/ja/` が同一行番号で 1 対 1 対応する。詳細: `references/filename-conventions.md`。
+これで `ls docs/en/` と `ls docs/ja/` が同一行番号で 1 対 1 対応する。詳細: [references/filename-conventions.md](references/filename-conventions.md)。
 
 ## Deploy target selection
 
@@ -105,7 +105,7 @@ EPUB spine 順 == FILENAME_MAP の値の NN 順 == docs/en/ ASCII ソート順 =
 
 明示したい場合は `--cloudflare-project-name=<name>` で上書き可能。
 
-**前提**: Cloudflare デプロイは private リポジトリ運用が前提。public リポジトリだと `wrangler.toml` を誰でも読めてしまうので URL ランダム化が無意味になる。完全な隠蔽が要件なら **Cloudflare Access** に切替（独自ドメイン + Access ポリシー、`functions/_middleware.ts` 削除のみで移行可能、`references/deploy-cloudflare.md` 参照）。
+**前提**: Cloudflare デプロイは private リポジトリ運用が前提。public リポジトリだと `wrangler.toml` を誰でも読めてしまうので URL ランダム化が無意味になる。完全な隠蔽が要件なら **Cloudflare Access** に切替（独自ドメイン + Access ポリシー、`functions/_middleware.ts` 削除のみで移行可能、[references/deploy-cloudflare.md](references/deploy-cloudflare.md) 参照）。
 
 ### 既存プロジェクトの移行
 
@@ -143,7 +143,7 @@ migrate スクリプトが旧 `.github/workflows/deploy.yml` 削除・`base:` �
    - **GitHub Pages**: `.github/workflows/deploy.yml`（既存どおり）
    - **Cloudflare Pages**: `.github/workflows/cloudflare-pages.yml` / `functions/_middleware.ts` / `wrangler.toml` / `.env.local.example`、加えて `vitepress-config.mts` の `base:` 行は自動削除（ルート配信のため）
 
-   詳細は **「Deploy target selection」章**（下）と `references/deploy-{cloudflare,github-pages}.md`。
+   詳細は **「Deploy target selection」章**（下）と [references/deploy-cloudflare.md](references/deploy-cloudflare.md) / [references/deploy-github-pages.md](references/deploy-github-pages.md)。
 
 2. **EPUB 配置と依存インストール**
    ```bash
@@ -153,19 +153,19 @@ migrate スクリプトが旧 `.github/workflows/deploy.yml` 削除・`base:` �
 
    `init-project.sh` が配置する `.github/workflows/*.yml` は **`branches: [main, master]` 両対応**で生成されるため、リポジトリのデフォルトブランチが `main` でも `master` でも追加設定なくデプロイされる。
 
-   - **GitHub Pages 選択時**: `vitepress-config.mts` の `base: '/<repo-name>/'` がリポジトリ名で置換済みなので、`Settings → Pages → Source: GitHub Actions` を 1 度有効化すれば push 経由で自動公開される。詳細は `references/deploy-github-pages.md`
-   - **Cloudflare Pages 選択時**: 別途 `.env.local` を埋めて `bash $SKILL_DIR/scripts/init-cloudflare-deployment.sh` を 1 回実行する必要がある（API Token・Account ID・Basic 認証 ID/PW を設定し、初回デプロイと GitHub Secrets 登録を行う）。詳細は `references/deploy-cloudflare.md`
+   - **GitHub Pages 選択時**: `vitepress-config.mts` の `base: '/<repo-name>/'` がリポジトリ名で置換済みなので、`Settings → Pages → Source: GitHub Actions` を 1 度有効化すれば push 経由で自動公開される。詳細は [references/deploy-github-pages.md](references/deploy-github-pages.md)
+   - **Cloudflare Pages 選択時**: 別途 `.env.local` を埋めて `bash $SKILL_DIR/scripts/init-cloudflare-deployment.sh` を 1 回実行する必要がある（API Token・Account ID・Basic 認証 ID/PW を設定し、初回デプロイと GitHub Secrets 登録を行う）。詳細は [references/deploy-cloudflare.md](references/deploy-cloudflare.md)
 
-3. **extract-epub.mjs CONFIG 編集** (`references/extract-epub-customization.md` 参照)
+3. **extract-epub.mjs CONFIG 編集** ([references/extract-epub-customization.md](references/extract-epub-customization.md) 参照)
    - `epubFilename`, `opfPath`, `filenameMap`, `parser.*` を埋める
    - `node scripts/extract-epub.mjs --dry-run` で検証
    - `node scripts/extract-epub.mjs` で本番実行
 
 4. **用語集・スタイルガイド作成** (Setup s2/s3 — orchestrator 自身が担当)
-   - `docs/ja/_glossary.md`: `references/glossary-template.md` を参照して書籍ジャンル別用語をまとめる
-   - `docs/ja/_styleguide.md`: `references/styleguide-template.md` をコピー・調整
+   - `docs/ja/_glossary.md`: [references/glossary-template.md](references/glossary-template.md) を参照して書籍ジャンル別用語をまとめる
+   - `docs/ja/_styleguide.md`: [references/styleguide-template.md](references/styleguide-template.md) をコピー・調整
 
-5. **gen-tickets.mjs CONFIG 編集** (`references/gen-tickets-customization.md` 参照)
+5. **gen-tickets.mjs CONFIG 編集** ([references/gen-tickets-customization.md](references/gen-tickets-customization.md) 参照)
    - `chapterTitleJa`, `specialTitleJa`, `prioritizeP1`, `proofPhase` を埋める
    - `bd init` (まだなら)
    - `node scripts/gen-tickets.mjs --dry-run` で確認
@@ -226,8 +226,8 @@ loop:
 ### Setup フェーズの細部
 
 - **s1** (ディレクトリ準備): `init-project.sh` 出力を確認するだけ
-- **s2** (用語集): orchestrator が `references/glossary-template.md` を参考に書籍ジャンル別用語を集めて `docs/ja/_glossary.md` を作成。書籍特有の用語を最低 30 件以上、章タイトル一覧を含める
-- **s3** (スタイルガイド): orchestrator が `references/styleguide-template.md` をコピーして書籍に合わせて調整
+- **s2** (用語集): orchestrator が [references/glossary-template.md](references/glossary-template.md) を参考に書籍ジャンル別用語を集めて `docs/ja/_glossary.md` を作成。書籍特有の用語を最低 30 件以上、章タイトル一覧を含める
+- **s3** (スタイルガイド): orchestrator が [references/styleguide-template.md](references/styleguide-template.md) をコピーして書籍に合わせて調整
 - **s4** (品質確認): orchestrator が **Translation Agent を 1 度 spawn** して `_sample.md` を生成。8 観点 (proof:en-ja-checklist) でセルフ評価し、Go なら次へ
 
 #### s2 / s3 を自走するか、人間レビューを挟むか
@@ -273,7 +273,7 @@ loop:
   - 既存プロジェクトの後追い修正: `node scripts/fix-internal-links.mjs && node scripts/inject-anchors.mjs`
   - リンク機能検証: `node scripts/check-links.mjs` (Final フェーズで必須、errors=0)
 
-詳細: `docs/ja/_styleguide.md` (プロジェクト固有) または `references/styleguide-template.md` (skill テンプレート)
+詳細: `docs/ja/_styleguide.md` (プロジェクト固有) または [references/styleguide-template.md](references/styleguide-template.md) (skill テンプレート)
 
 ## エージェント分離 (核心設計)
 
@@ -315,19 +315,19 @@ orchestrator は `scripts/claim-next-ticket.sh` を使うと race condition な�
 
 ## Detailed references
 
-- 5 フェーズの依存関係と作業詳細 → `references/workflow-phases.md`
-- 抽出 MD 構造校正の 10 項目 → `references/proof-epub-en-checklist.md`
-- 訳文校正の 11 項目 → `references/proof-en-ja-checklist.md`
+- 5 フェーズの依存関係と作業詳細 → [references/workflow-phases.md](references/workflow-phases.md)
+- 抽出 MD 構造校正の 10 項目 → [references/proof-epub-en-checklist.md](references/proof-epub-en-checklist.md)
+- 訳文校正の 11 項目 → [references/proof-en-ja-checklist.md](references/proof-en-ja-checklist.md)
 - コードフラグメント検出 lint (`scripts/check-code-fragments.mjs`) → 抽出/翻訳両方で実行可
-- ファイル名規則と不変条件 → `references/filename-conventions.md`
-- extract-epub.mjs CONFIG 埋め方 → `references/extract-epub-customization.md`
-- EPUB 構造バリエーション (出版社別の anchor 抽出パターン) → `references/epub-variations.md`
-- gen-tickets.mjs CONFIG 埋め方 → `references/gen-tickets-customization.md`
-- 用語集テンプレート → `references/glossary-template.md`
-- スタイルガイドテンプレート → `references/styleguide-template.md`
-- 再校正パターン (extract-epub 改修後) → `references/reproof-pattern.md`
-- **Cloudflare Pages デプロイ詳細** → `references/deploy-cloudflare.md`
-- **GitHub Pages デプロイ詳細** → `references/deploy-github-pages.md`
+- ファイル名規則と不変条件 → [references/filename-conventions.md](references/filename-conventions.md)
+- extract-epub.mjs CONFIG 埋め方 → [references/extract-epub-customization.md](references/extract-epub-customization.md)
+- EPUB 構造バリエーション (出版社別の anchor 抽出パターン) → [references/epub-variations.md](references/epub-variations.md)
+- gen-tickets.mjs CONFIG 埋め方 → [references/gen-tickets-customization.md](references/gen-tickets-customization.md)
+- 用語集テンプレート → [references/glossary-template.md](references/glossary-template.md)
+- スタイルガイドテンプレート → [references/styleguide-template.md](references/styleguide-template.md)
+- 再校正パターン (extract-epub 改修後) → [references/reproof-pattern.md](references/reproof-pattern.md)
+- **Cloudflare Pages デプロイ詳細** → [references/deploy-cloudflare.md](references/deploy-cloudflare.md)
+- **GitHub Pages デプロイ詳細** → [references/deploy-github-pages.md](references/deploy-github-pages.md)
 
 ## Bundled scripts と agents
 
@@ -351,7 +351,7 @@ orchestrator は `scripts/claim-next-ticket.sh` を使うと race condition な�
 | 個人用・社内資料・ドラフト品質で十分 | `'epub-only'` | 抽出 MD の構造のみ確認、訳文校正は手動で代替 |
 | 短い記事・ブログ翻訳 | `'none'` | proof フェーズなし、translation 一発 |
 
-`gen-tickets.mjs` の `CONFIG.proofPhase` で切り替え可能 (詳細は `references/gen-tickets-customization.md`)。
+`gen-tickets.mjs` の `CONFIG.proofPhase` で切り替え可能 (詳細は [references/gen-tickets-customization.md](references/gen-tickets-customization.md))。
 
 ## skill の独立性
 
