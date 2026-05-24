@@ -1,6 +1,7 @@
 ---
 name: usage-guide
 description: >-
+  Create Japanese usage docs under .usage/ from the current repo state.
   リポジトリの現在の状態を分析し、.usage/ ディレクトリにシステムの使い方ドキュメント（日本語）を生成する。
   「使い方ガイドを生成」「.usage/ にドキュメントを書いて」「利用ガイドを作成」
   「このリポジトリの使い方をまとめて」「ユーザーガイドを .usage/ に」「usage guide を作って」

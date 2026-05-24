@@ -1,6 +1,7 @@
 ---
 name: worksample-question-generator
 description: >-
+  Create interview deep-dive questions from a worksample assignment and candidate answers.
   採用面談のワークサンプル課題（事前課題・技術課題）と応募者の事前回答を入力として、面接当日に深掘りすべき質問・示唆を、課題の問いごとに整理した
   Markdown を生成する。ユーザーが「課題ファイル」(ワークサンプル/技術課題/事前課題/選考課題) と「回答ファイル」(技術課題回答/ワイヤーフレーム/応募者の回答)
   の両方を提示し、面接準備をしたい場合は、明示的に「質問生成」と言われなくても必ずこのスキルを使う。

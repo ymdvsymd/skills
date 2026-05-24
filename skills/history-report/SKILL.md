@@ -1,6 +1,7 @@
 ---
 name: history-report
 description: >-
+  Create Japanese repo-history reports under .history/ from a specified version/time.
   リポジトリの特定バージョン・時期以降の更新を調査し、.history/ ディレクトリに構造化された日本語ドキュメントを生成する。
   「.history に書いて」「更新レポートを生成」「v1.10.0 以降の変更を .history/ に」
   「最近の変更をドキュメント化」「CHANGELOG を .history/ 形式で展開」

@@ -1,6 +1,7 @@
 ---
 name: sync-with-origin-main
 description: >-
+  Sync the local branch with the latest origin/main (rebase first, fall back to merge on conflict).
   ローカルブランチに最新の `origin/main` を取り込む。
   「最新のorigin/mainをリベース」「origin/main を取り込む」「origin/main にリベース」
   「main を最新に追従」「リモートの main を取り込んで」「main を最新化」

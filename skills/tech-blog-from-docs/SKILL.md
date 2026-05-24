@@ -1,6 +1,7 @@
 ---
 name: tech-blog-from-docs
 description: >-
+  Create Japanese tech-blog articles (why/what/how) from source documents.
   日本語の技術ブログ記事を生成する。技術ドキュメント（複数ファイル、ディレクトリ、URL）を素材に、
   why/what/how の 3 部構成で 15-45 分の読み物を執筆する。
   以下のトリガーで必ず発動する:
@@ -43,7 +44,7 @@ description: >-
 
 | 引数 | 形式 | 例 |
 |---|---|---|
-| ソース | ディレクトリパス / ファイルパス（複数可）/ URL（複数可）の組み合わせ | `/path/to/docs/`, `[file1.md, file2.md]`, `https://example.com/intro` |
+| ソース | ディレクトリパス / ファイルパス（複数可）/ URL（複数可）の組み合わせ | `/path/to/docs/`, `[file1.md, file2.md]`, `<URL>` |
 | 出力先 | 絶対パス。日付プレフィックスを付けたファイル名まで含む or ディレクトリ | `/path/to/output/2026-05-22-topic.md` or `/path/to/.history/` |
 
 ## Workflow
