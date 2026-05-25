@@ -1,13 +1,43 @@
 tokens:
-  warningThreshold: 8000
-  fallbackLimit: 5000
+  warningThreshold: 2500
+  fallbackLimit: 2000
   limits:
     defaults:
-      "SKILL.md": 8000
-      "references/*.md": 10000
-      "references/**/*.md": 10000
-      "agents/*.md": 3000
-      "agents/**/*.md": 3000
-      "*.md": 5000
+      # APM (Microsoft) 推奨: SKILL.md は 500 lines / 5000 tokens
+      # https://microsoft.github.io/apm/producer/author-primitives/skills/
+      "SKILL.md": 5000
+      # references / agents / その他は waza built-in default ベース
+      "references/*.md": 1000
+      "references/**/*.md": 1000
+      "agents/*.md": 1000
+      "agents/**/*.md": 1000
+      "*.md": 2000
     overrides:
-      "README.md": 5000
+      "README.md": 3000
+      # 各 skill の現状を許容する override (500 token 単位で切り上げ)。
+      # 改善が進んだら値を下げる方針。
+      # --- SKILL.md ---
+      "skills/book-translation-pipeline/SKILL.md": 7500
+      "skills/usage-guide/SKILL.md": 5500
+      # --- tech-blog-from-docs/references ---
+      "skills/tech-blog-from-docs/references/self-review.md": 10000
+      "skills/tech-blog-from-docs/references/japanese-writing.md": 6000
+      "skills/tech-blog-from-docs/references/article-structure.md": 2000
+      "skills/tech-blog-from-docs/references/source-research.md": 2000
+      "skills/tech-blog-from-docs/references/interview-template.md": 1500
+      # --- book-translation-pipeline/references ---
+      "skills/book-translation-pipeline/references/proof-en-ja-checklist.md": 4500
+      "skills/book-translation-pipeline/references/extract-epub-customization.md": 4000
+      "skills/book-translation-pipeline/references/epub-variations.md": 3500
+      "skills/book-translation-pipeline/references/proof-epub-en-checklist.md": 3000
+      "skills/book-translation-pipeline/references/reproof-pattern.md": 2500
+      "skills/book-translation-pipeline/references/gen-tickets-customization.md": 2000
+      "skills/book-translation-pipeline/references/workflow-phases.md": 2000
+      "skills/book-translation-pipeline/references/glossary-template.md": 2000
+      "skills/book-translation-pipeline/references/styleguide-template.md": 2000
+      "skills/book-translation-pipeline/references/filename-conventions.md": 2000
+      "skills/book-translation-pipeline/references/deploy-cloudflare.md": 2000
+      # --- book-translation-pipeline/agents ---
+      "skills/book-translation-pipeline/agents/proof-en-ja-agent.md": 2000
+      "skills/book-translation-pipeline/agents/proof-epub-en-agent.md": 1500
+      "skills/book-translation-pipeline/agents/translation-agent.md": 1500
