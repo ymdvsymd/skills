@@ -1,16 +1,11 @@
 ---
 name: sync-with-origin-main
 description: >-
-  Sync the local branch with the latest origin/main (rebase first, fall back to merge on conflict).
-  ローカルブランチに最新の `origin/main` を取り込む。
-  「最新のorigin/mainをリベース」「origin/main を取り込む」「origin/main にリベース」
-  「main を最新に追従」「リモートの main を取り込んで」「main を最新化」
-  「origin/main で更新」「最新の main に追従」のような依頼で発動する。
-  `git fetch` → 乖離確認 → まず `git rebase origin/main` を試し、衝突したら
-  `--abort` して `git merge origin/main` に切り替えることで、線形履歴を優先しつつ
-  コンフリクト解決を最小回数に抑える。dirty working tree は中断、push は常に手動。
-  Git で main の最新を追従したい依頼が来たら、明示的に「スキル」と言われなくても
-  これを使うこと。
+  Sync the current branch with the latest origin/main (rebase first, fall back to merge on conflict).
+  「最新のorigin/mainをリベース」「origin/main を取り込む」「main を最新に追従」「リモートの main を取り込んで」「main を最新化」のような依頼で発動する。
+  USE FOR: ローカルブランチの origin/main 追従、線形履歴優先の rebase、衝突時の自動 merge fallback、dirty tree 検出による中断。
+  DO NOT USE FOR: push --force、main 以外のブランチへの追従、外部 PR の取り込み、squash merge 戦略。
+  INVOKES: git fetch, git rebase, git merge.
 ---
 
 # Sync with origin/main

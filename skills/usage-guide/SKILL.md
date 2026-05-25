@@ -1,15 +1,11 @@
 ---
 name: usage-guide
 description: >-
-  Create Japanese usage docs under .usage/ from the current repo state.
-  リポジトリの現在の状態を分析し、.usage/ ディレクトリにシステムの使い方ドキュメント（日本語）を生成する。
-  「使い方ガイドを生成」「.usage/ にドキュメントを書いて」「利用ガイドを作成」
-  「このリポジトリの使い方をまとめて」「ユーザーガイドを .usage/ に」「usage guide を作って」
-  「具体的な使い方を知りたい」「ユースケースをまとめて」
-  のような依頼で発動する。README、ソースコード、テスト、設定ファイル、コマンド定義の分析を伴う。
-  history-report（変更履歴）とは異なり、現在の HEAD における「今どう使うか」に特化した実用ガイドを生成する。
-  ユーザーがリポジトリの使い方、具体的なユースケース、セットアップ手順、コマンドリファレンスについて
-  ドキュメント化を求めた場合は、明示的に .usage/ と言わなくてもこのスキルを使うこと。
+  Create Japanese usage docs under .usage/ from the current repo state (HEAD).
+  「使い方ガイドを生成」「.usage/ にドキュメントを書いて」「利用ガイドを作成」「具体的な使い方を知りたい」「ユースケースをまとめて」「セットアップ手順を書いて」のような依頼で発動する。
+  USE FOR: HEAD 時点の実用ユーザーガイド、コマンドリファレンス、ユースケース集、セットアップ手順 (README/ソース/テスト/設定/コマンド定義の解析を伴う)。
+  DO NOT USE FOR: 変更履歴の解説 (use history-report instead)、コード生成、依存追加、API 仕様書のみ、リリースノート。
+  INVOKES: README / source / config / command-definition analysis.
 ---
 
 # Usage Guide Generator

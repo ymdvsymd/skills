@@ -91,13 +91,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### `.waza.yaml` の token budget
 
-| ファイル glob | 上限 (tokens) |
-|---|---|
-| `SKILL.md` | 8000 (warningThreshold) / fallback 5000 |
-| `references/*.md`, `references/**/*.md` | 10000 |
-| `agents/*.md`, `agents/**/*.md` | 3000 |
-| その他 `*.md` | 5000 |
-| `README.md` (override) | 5000 |
+| ファイル glob | hard limit (tokens) | 備考 |
+|---|---|---|
+| `SKILL.md` | 5000 (APM 推奨) | over 時は references/ に分割 |
+| `references/*.md`, `references/**/*.md` | 1000 (default) + path override | 大物は path override で個別緩和 |
+| `agents/*.md`, `agents/**/*.md` | 1000 (default) | 同上 |
+| その他 `*.md` | 2000 | |
+| `README.md` (override) | 3000 | |
+
+**warning threshold は global**: `tokens.warningThreshold: 5000`。waza は path 単位の override が **hard limit にしか効かない仕様** (warningThreshold は global のみ)。warning を消したければ (a) コンテンツを 5000 tokens 以下に圧縮するか、(b) global warningThreshold を引き上げるしかない。
 
 上限を超えたら:
 
@@ -112,14 +114,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `over-specificity` — 過度に具体的な指示
 - `procedural-content` — 手順の埋め込みすぎ
 - `body-structure` — 本文の構造的問題
+- `module-count` — references 数 4 以上は consolidation 推奨 (上限は waza 内部 hardcode)
+- `cross-model-density` — description が 60 単語超だと cross-model 効果が落ちる (上限は waza 内部 hardcode)
 
 これらが新たに `passed: false` になると CI は exit 1。修復は `waza dev <name> --target high` を起点に進める。
 
-一方、以下の advisory は **accepted as failing** (CI で gate しない):
-
-- `complexity`
-- `module-count`
-- `cross-model-density`
+一方、`complexity` は **accepted as failing** (CI で gate しない)。理由: waza の `advisory_checks.go` で閾値が `token > 500 OR modules >= 4` に hardcode されており、実用的な workflow skill では構造的に pass 不可能。`.waza.yaml` 等で閾値を変更する仕組みはない (upstream waza 改修が必要)。
 
 ローカルで gated advisory の状態を確認:
 
@@ -285,7 +285,7 @@ skill 編集と **同一コミット** で README.md を更新すべきケース
 1. **token 違反** (`waza tokens check --strict`)
 2. **eval.yaml の schema 違反**
 3. **orphaned reference files** (SKILL.md から link されていない `references/` ファイル)
-4. **gated advisories の regression** (`over-specificity`, `procedural-content`, `body-structure`)
+4. **gated advisories の regression** (`over-specificity`, `procedural-content`, `body-structure`, `module-count`, `cross-model-density`)
 
 失敗時の修復順:
 

@@ -1,20 +1,11 @@
 ---
 name: tech-blog-from-docs
 description: >-
-  Create Japanese tech-blog articles (why/what/how) from source documents.
-  日本語の技術ブログ記事を生成する。技術ドキュメント（複数ファイル、ディレクトリ、URL）を素材に、
-  why/what/how の 3 部構成で 15-45 分の読み物を執筆する。
-  以下のトリガーで必ず発動する:
-  「テクノ場の記事を書いて」「社内勉強会用の発表資料を書きたい」「ブラウンバッグで紹介したい」
-  「技術ブログ記事として書いて」「技術ブログを書いて」「解説記事を作って」「読み物として整理して」
-  「○○ をブログにしたい」「○○ の紹介記事を書いて」「ブログ作って」「○○ をテクノ場で紹介したい」
-  「why/what/how で整理して」「30 分で読める解説」「入門ブログを書きたい」。
-  ユーザーがスライドではなくブログ記事/読み物を求め、かつソースとなるドキュメント
-  （ローカルパス、URL、md ファイル群、リポジトリ、PDF など）を提示している場合は、
-  明示的に「スキル」と言われなくても必ずこれを使うこと。
-  OSS や新しいツールの社内紹介、技術概念の解説、社内勉強会・テクノ場・Lightning Talk 用の
-  読み物、長めの技術解説記事のすべてが対象。短いお知らせやリリースノート、スライド資料、
-  README 更新、コード修正、ステータスレポート、agenda 草案はこのスキルの対象ではない。
+  Create Japanese tech-blog articles (why/what/how) from source documents (local files, URLs, repos, PDFs).
+  「テクノ場の記事を書いて」「技術ブログを書いて」「解説記事を作って」「30 分で読める解説」「ブラウンバッグで紹介したい」「why/what/how で整理して」のような依頼で発動する。
+  USE FOR: OSS や新ツールの社内紹介、技術概念の解説、ブラウンバッグ・Lightning Talk・社内勉強会用の長め読み物 (15-45 分)。
+  DO NOT USE FOR: 短文お知らせ、リリースノート、スライド資料、README 更新、コード修正、ステータスレポート、agenda 草案。
+  INVOKES: source-document analysis, japanese-writing rules, self-review checklist.
 ---
 
 # Tech Blog from Docs
@@ -61,7 +52,7 @@ description: >-
 3. **記事のトーン** — 実利重視（コード中心）/ 概念重視（思想・設計判断中心）/ バランス型
 4. **出力先と読了時間目安** — ファイルパスと、想定読了分数（デフォルト 30 分）
 
-詳しい質問テンプレと選択肢の文言は [references/interview-template.md](references/interview-template.md) を読む。
+詳しい質問テンプレと選択肢の文言は [references/prep-and-structure.md](references/prep-and-structure.md) の Phase 1 セクションを読む。
 
 ### Phase 2: Source Research（素材調査）
 
@@ -79,7 +70,7 @@ description: >-
 
 各 subagent には「2,000〜3,000 字以内で報告、コード例・YAML 例を引用形で含めること」と明示する。
 
-詳しい指示テンプレは [references/source-research.md](references/source-research.md) を読む。
+詳しい指示テンプレは [references/prep-and-structure.md](references/prep-and-structure.md) の Phase 2 セクションを読む。
 
 ### Example — Phase 3: Article Structure（記事構成）
 
@@ -119,7 +110,7 @@ description: >-
 ## 参考リンク
 ```
 
-各セクションの詳しい中身ガイドは [references/article-structure.md](references/article-structure.md) を読む。
+各セクションの詳しい中身ガイドは [references/prep-and-structure.md](references/prep-and-structure.md) の Phase 3 セクションを読む。
 
 ### Phase 4: Writing（執筆）
 
@@ -199,9 +190,7 @@ description: >-
 tech-blog-from-docs/
 ├── SKILL.md                       # このファイル
 └── references/
-    ├── interview-template.md      # Phase 1 で参照
-    ├── source-research.md         # Phase 2 で参照
-    ├── article-structure.md       # Phase 3 で参照
+    ├── prep-and-structure.md      # Phase 1–3 (Intent / Source / Structure)
     ├── japanese-writing.md        # Phase 4 で参照
     └── self-review.md             # Phase 5 で参照（最重要）
 ```

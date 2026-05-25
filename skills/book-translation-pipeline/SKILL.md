@@ -1,19 +1,11 @@
 ---
 name: book-translation-pipeline
-description: |
-  Orchestrates EPUB→Japanese book translation projects: 5-phase pipeline
-  (setup, proof:epub-en, translation, proof:en-ja, final) producing
-  bilingual VitePress sites with beads-managed tickets and separate
-  subagents for translation/proofreading. Beads state persists across
-  sessions and rate limits. INVOKE IMMEDIATELY without clarifying
-  questions when user mentions ANY of: translating an EPUB / 技術書を翻訳
-  / 翻訳したい / 日本語に訳す, translation project / 翻訳プロジェクト /
-  翻訳サイト, docs/en + docs/ja / 日本語訳サイト, proof:epub-en /
-  proof:en-ja / 校正チケット / 再校正バッチ, extract-epub.mjs /
-  gen-tickets.mjs / 翻訳チケット, 翻訳続き / 翻訳再開 / 翻訳作業の続き /
-  bd ready 再開 / rate limit 復帰, 翻訳と校正を別エージェント /
-  確認バイアス, any book series (DMRB, etc.). The skill handles
-  clarification — do NOT ask for details first.
+description: >-
+  Orchestrate EPUB→Japanese book translation as a 5-phase pipeline (setup, proof:epub-en, translation, proof:en-ja, final) producing bilingual VitePress sites with beads-managed tickets.
+  「EPUBを翻訳」「技術書を翻訳」「翻訳プロジェクト」「proof:epub-en」「proof:en-ja」「翻訳続き/再開」「bd ready 復帰」「DMRB」のような依頼で即発動する。
+  USE FOR: 書籍翻訳プロジェクト初期化、5 フェーズ進行、beads チケット運用、rate limit 復帰後の続行、翻訳と校正を別 subagent で実行。
+  DO NOT USE FOR: 短文・UI 文言・コードコメント翻訳、PDF 直接翻訳、機械翻訳の事後修正のみ。
+  INVOKES: beads tickets, translation/proofreading subagents, extract-epub.mjs, gen-tickets.mjs.
 ---
 
 # Book Translation Pipeline (EPUB → 日本語訳 VitePress)
@@ -44,7 +36,7 @@ description: |
         +---> Final (全 Translation + 全 Proof:EN-JA 完了後)
 ```
 
-詳細: [references/workflow-phases.md](references/workflow-phases.md)
+詳細: [references/pipeline-customization.md](references/pipeline-customization.md) の Workflow phases セクション
 
 ## When to invoke
 
@@ -52,7 +44,7 @@ description: |
 - 既存 EPUB から日英並置 VitePress サイトを構築する
 - proof:epub-en (10 項目) / proof:en-ja (11 項目) チェックリストを参照する
 - extract-epub.mjs / gen-tickets.mjs を新書籍向けにカスタマイズする
-- extract-epub.mjs 改修後の再校正バッチを起票する ([references/reproof-pattern.md](references/reproof-pattern.md))
+- extract-epub.mjs 改修後の再校正バッチを起票する ([references/proof-checklists.md](references/proof-checklists.md) の reproof セクション)
 - 中断したセッションから `bd ready` で復帰する
 
 ## 設計上の不変条件
@@ -63,61 +55,21 @@ description: |
 EPUB spine 順 == FILENAME_MAP の値の NN 順 == docs/en/ ASCII ソート順 == docs/ja/ ASCII ソート順
 ```
 
-これで `ls docs/en/` と `ls docs/ja/` が同一行番号で 1 対 1 対応する。詳細: [references/filename-conventions.md](references/filename-conventions.md)。
+これで `ls docs/en/` と `ls docs/ja/` が同一行番号で 1 対 1 対応する。詳細: [references/templates.md](references/templates.md) の Filename Conventions。
 
 ## Deploy target selection
 
-このスキルは **GitHub Pages（公開）** と **Cloudflare Pages + Basic 認証（関係者限定）** の 2 通りのデプロイ先をサポートする。`init-project.sh` 実行時に次の優先順で確定する:
+サポートするデプロイ先は **GitHub Pages（公開）** と **Cloudflare Pages + Basic 認証（関係者限定）** の 2 通り。
 
-| 優先順 | 入力 | 動作 |
-|---|---|---|
-| 1 | `--deploy-target=cloudflare` または `--deploy-target=github` | 明示指定をそのまま使う |
-| 2 | 環境変数 `DEPLOY_TARGET` | 同上 |
-| 3 | `gh repo view --json visibility` で自動判定 | `PRIVATE` → cloudflare、`PUBLIC` → github |
-| 4 | tty があれば対話プロンプト | `1) cloudflare  2) github` |
-| 5 | tty なし & 上記すべて不能 | exit 1（エラー終了） |
+**`init-project.sh` での確定優先順**: (1) `--deploy-target=cloudflare|github` 明示指定 → (2) 環境変数 `DEPLOY_TARGET` → (3) `gh repo view --json visibility` で自動判定 (PRIVATE→cloudflare, PUBLIC→github) → (4) tty 対話プロンプト → (5) tty 無しで判定不能なら exit 1。
 
-### orchestrator（メイン Claude）の振る舞い
+**orchestrator の振る舞い**: ユーザー入力の語彙を翻訳して `--deploy-target=...` に渡す。「Cloudflare/Basic 認証/内部限定/関係者だけに/private で公開」→ cloudflare。「GitHub Pages/公開で/OSS として/オープンに」→ github。明示なし & 自動判定不能なら **人間に確認** (多くの agent CLI の Bash 実行は tty を持たないので、対話 read プロンプトに到達させない)。
 
-ユーザー入力に**デプロイ先の指示**が含まれていれば、それを `--deploy-target=...` に翻訳して `init-project.sh` に渡す:
+**Cloudflare 選択時**: `.env.local` に `CLOUDFLARE_API_TOKEN` (`Pages > Edit` 必須) / `CLOUDFLARE_ACCOUNT_ID` / `BASIC_AUTH_USER` / `BASIC_AUTH_PASS` を入れ、`bash $SKILL_DIR/scripts/init-cloudflare-deployment.sh` を 1 回実行。配信 URL は `https://<RANDOM_16_CHARS>.pages.dev/` (プロジェクト名はデフォルトでランダム英数字 16 字、`--cloudflare-project-name=<name>` で上書き可能)。前提として **private リポジトリ運用**。完全な隠蔽が要件なら **Cloudflare Access** に切替 (独自ドメイン + Access ポリシー、`functions/_middleware.ts` 削除のみで移行可能)。
 
-| ユーザー入力に含まれる語 | 解釈 |
-|---|---|
-| 「Cloudflare」「Cloudflare Pages」「Basic 認証で」「内部限定で」「ドラフトで」「関係者だけに」「private で公開」 | `--deploy-target=cloudflare` |
-| 「GitHub Pages で」「公開で」「世界に公開」「OSS として」「オープンに」 | `--deploy-target=github` |
+**既存 GitHub Pages → Cloudflare 移行**: `bash $SKILL_DIR/scripts/migrate-to-cloudflare.sh` → `.env.local` 編集 → `--continue` で完了。旧 workflow 削除・base 行削除・Cloudflare 系配置・初回デプロイ・Secrets 登録・gh-pages 削除・README 更新まで一気通貫。
 
-明示なしの場合: `gh repo view --json visibility` で確認。判定不能（リポジトリ未 push、`gh` 未ログイン、API エラー）なら **人間に確認**（Claude Code は `AskUserQuestion`、Codex 等は対話プロンプトで聞く）してから `init-project.sh` を呼ぶ。**多くの agent CLI の Bash 実行は tty を持たないため、対話 read プロンプトに到達させてはならない**（ハングする）。
-
-### Cloudflare 選択時の追加要件
-
-1. ユーザーは Cloudflare アカウントを所有
-2. `.env.local`（`init-project.sh` が `.env.local.example` を配置するのでコピーして埋める）に:
-   - `CLOUDFLARE_API_TOKEN`（`Pages > Edit` 必須、`User Details > Read` 推奨）
-   - `CLOUDFLARE_ACCOUNT_ID`
-   - `BASIC_AUTH_USER` / `BASIC_AUTH_PASS`
-3. `bash $SKILL_DIR/scripts/init-cloudflare-deployment.sh` を 1 回実行
-   - wrangler の追加 / プロジェクト作成 / secret 登録 / 初回デプロイ / GitHub Secrets 登録 / README 更新までを CLI で完結
-4. 配信 URL は `https://<RANDOM_16_CHARS>.pages.dev/`（**プロジェクト名はランダム生成**で URL 推測困難化）
-
-### Cloudflare プロジェクト名のランダム化
-
-リポジトリ名そのままを使うと `<repo>.pages.dev` という推測しやすい URL になり、Basic 認証ダイアログまで誰でも到達する。それを避けるため `init-project.sh` は **デフォルトで 16 文字のランダム英数字**（先頭は英字保証）を Cloudflare プロジェクト名にする。`wrangler.toml` の `name` と `cloudflare-pages.yml` の `--project-name=` に同じ値が書き込まれる。
-
-明示したい場合は `--cloudflare-project-name=<name>` で上書き可能。
-
-**前提**: Cloudflare デプロイは private リポジトリ運用が前提。public リポジトリだと `wrangler.toml` を誰でも読めてしまうので URL ランダム化が無意味になる。完全な隠蔽が要件なら **Cloudflare Access** に切替（独自ドメイン + Access ポリシー、`functions/_middleware.ts` 削除のみで移行可能、[references/deploy-cloudflare.md](references/deploy-cloudflare.md) 参照）。
-
-### 既存プロジェクトの移行
-
-既に GitHub Pages で運用中のプロジェクトを Cloudflare Pages + Basic 認証へ切り替えたいときは:
-
-```bash
-bash $SKILL_DIR/scripts/migrate-to-cloudflare.sh
-# 案内に従って .env.local を作成し、値を埋めてから:
-bash $SKILL_DIR/scripts/migrate-to-cloudflare.sh --continue
-```
-
-migrate スクリプトが旧 `.github/workflows/deploy.yml` 削除・`base:` 行削除・Cloudflare 系ファイル配置・初回デプロイ・GitHub Secrets 登録・GitHub Pages 停止・`gh-pages` ブランチ削除・README の URL 更新までを一気通貫で行う。最後にコミット内容を表示するので、ユーザーが内容を確認して `git commit && git push` する。
+詳細は [references/pipeline-customization.md](references/pipeline-customization.md) の Deploy セクション。
 
 ## Step-by-step
 
@@ -126,46 +78,26 @@ migrate スクリプトが旧 `.github/workflows/deploy.yml` 削除・`base:` �
 1. **プロジェクト初期化**
    ```bash
    mkdir -p ~/oss/<project> && cd ~/oss/<project>
-   gh repo create --private --source=.   # private なら Cloudflare、public なら GitHub Pages を自動選択
+   gh repo create --private --source=.   # PRIVATE→Cloudflare、PUBLIC→GitHub Pages 自動選択
    "$SKILL_DIR/scripts/init-project.sh" \
        <PROJECT_NAME> <epub-filename>.epub "<BOOK_TITLE_JA>" \
        [--deploy-target=cloudflare|github] [--cloudflare-project-name=<name>]
    ```
 
-   `$SKILL_DIR` は本 skill の install 先。agent ごとに異なる:
-   - Claude Code: `~/.claude/skills/book-translation-pipeline/`
-   - Codex CLI: `~/.codex/skills/book-translation-pipeline/` または `~/.agents/skills/book-translation-pipeline/`
-   - APM の `agent-skills` (cross-client) target: `~/.agents/skills/book-translation-pipeline/`
+   `$SKILL_DIR` は agent ごとに異なる (Claude Code: `~/.claude/skills/.../`、Codex / APM cross-client: `~/.codex/skills/.../` または `~/.agents/skills/.../`)。配置物: `README.md` / `package.json` / `AGENTS.md` (canonical) + `CLAUDE.md` import / `docs/.vitepress/` / `docs/{index.md,ja/index.md}` / `scripts/{extract-epub,gen-tickets,claim-next-ticket}*`。デプロイ先別の workflow と Cloudflare 系ファイルも同時配置 (`vitepress-config.mts` の `base:` は Cloudflare 時自動削除)。
 
-   配置されるファイル（共通）: `README.md` / `package.json` / `.gitignore` / `AGENTS.md` (canonical) / `CLAUDE.md` (`@./AGENTS.md` import + Claude Code 固有 hint) / `docs/.vitepress/config.mts` / `docs/.vitepress/theme/{custom.css,index.ts}` / `docs/index.md` / `docs/ja/index.md` / `scripts/{extract-epub.mjs,gen-tickets.mjs,claim-next-ticket.sh}`
+2. **EPUB 配置と依存インストール**: `cp /path/to/book.epub docs/<epub>.epub && npm install`。`.github/workflows/*.yml` は `branches: [main, master]` 両対応。GitHub Pages なら `Settings → Pages → Source: GitHub Actions` 有効化のみ。Cloudflare なら `.env.local` 編集 + `bash $SKILL_DIR/scripts/init-cloudflare-deployment.sh` 1 回実行 ([references/pipeline-customization.md](references/pipeline-customization.md) の Deploy セクション参照)。
 
-   デプロイ先別:
-   - **GitHub Pages**: `.github/workflows/deploy.yml`（既存どおり）
-   - **Cloudflare Pages**: `.github/workflows/cloudflare-pages.yml` / `functions/_middleware.ts` / `wrangler.toml` / `.env.local.example`、加えて `vitepress-config.mts` の `base:` 行は自動削除（ルート配信のため）
-
-   詳細は **「Deploy target selection」章**（下）と [references/deploy-cloudflare.md](references/deploy-cloudflare.md) / [references/deploy-github-pages.md](references/deploy-github-pages.md)。
-
-2. **EPUB 配置と依存インストール**
-   ```bash
-   cp /path/to/book.epub docs/<epub-filename>.epub
-   npm install
-   ```
-
-   `init-project.sh` が配置する `.github/workflows/*.yml` は **`branches: [main, master]` 両対応**で生成されるため、リポジトリのデフォルトブランチが `main` でも `master` でも追加設定なくデプロイされる。
-
-   - **GitHub Pages 選択時**: `vitepress-config.mts` の `base: '/<repo-name>/'` がリポジトリ名で置換済みなので、`Settings → Pages → Source: GitHub Actions` を 1 度有効化すれば push 経由で自動公開される。詳細は [references/deploy-github-pages.md](references/deploy-github-pages.md)
-   - **Cloudflare Pages 選択時**: 別途 `.env.local` を埋めて `bash $SKILL_DIR/scripts/init-cloudflare-deployment.sh` を 1 回実行する必要がある（API Token・Account ID・Basic 認証 ID/PW を設定し、初回デプロイと GitHub Secrets 登録を行う）。詳細は [references/deploy-cloudflare.md](references/deploy-cloudflare.md)
-
-3. **extract-epub.mjs CONFIG 編集** ([references/extract-epub-customization.md](references/extract-epub-customization.md) 参照)
+3. **extract-epub.mjs CONFIG 編集** ([references/pipeline-customization.md](references/pipeline-customization.md) の extract-epub CONFIG セクション参照)
    - `epubFilename`, `opfPath`, `filenameMap`, `parser.*` を埋める
    - `node scripts/extract-epub.mjs --dry-run` で検証
    - `node scripts/extract-epub.mjs` で本番実行
 
 4. **用語集・スタイルガイド作成** (Setup s2/s3 — orchestrator 自身が担当)
-   - `docs/ja/_glossary.md`: [references/glossary-template.md](references/glossary-template.md) を参照して書籍ジャンル別用語をまとめる
-   - `docs/ja/_styleguide.md`: [references/styleguide-template.md](references/styleguide-template.md) をコピー・調整
+   - `docs/ja/_glossary.md`: [references/templates.md](references/templates.md) の Glossary Template を参照して書籍ジャンル別用語をまとめる
+   - `docs/ja/_styleguide.md`: [references/templates.md](references/templates.md) の Styleguide Template をコピー・調整
 
-5. **gen-tickets.mjs CONFIG 編集** ([references/gen-tickets-customization.md](references/gen-tickets-customization.md) 参照)
+5. **gen-tickets.mjs CONFIG 編集** ([references/pipeline-customization.md](references/pipeline-customization.md) の gen-tickets CONFIG セクション参照)
    - `chapterTitleJa`, `specialTitleJa`, `prioritizeP1`, `proofPhase` を埋める
    - `bd init` (まだなら)
    - `node scripts/gen-tickets.mjs --dry-run` で確認
@@ -177,45 +109,24 @@ migrate スクリプトが旧 `.github/workflows/deploy.yml` 削除・`base:` �
 
 ```
 loop:
-  ticket_json = $(./scripts/claim-next-ticket.sh)
-  ticket_id = $(echo $ticket_json | jq -r '.id')
-  if ticket_id is empty: break  # 全完了 or 全 blocked
+  ticket = $(./scripts/claim-next-ticket.sh)        # claim 済み JSON
+  if ticket is empty: break                          # 全完了 / 全 blocked
 
-  labels = $(echo $ticket_json | jq -r '.labels[]')
+  labels = ticket.labels
+  switch:
+    'translation' (NOT 'proof:*')  → run_role(agents/translation-agent.md)
+    'proof:epub-en'                → run_role(agents/proof-epub-en-agent.md)
+    'proof:en-ja'                  → run_role(agents/proof-en-ja-agent.md)   # 別 context 必須
+    'setup' or 'final'             → orchestrator が inline で処理
 
-  switch labels:
-    contains 'translation' AND NOT 'proof:*':
-      run_role(role_prompt="agents/translation-agent.md", ticket=ticket)
-    contains 'proof:epub-en':
-      run_role(role_prompt="agents/proof-epub-en-agent.md", ticket=ticket)
-    contains 'proof:en-ja':
-      run_role(role_prompt="agents/proof-en-ja-agent.md", ticket=ticket)   # 別 context 必須
-    contains 'setup' or 'final':
-      # orchestrator (=メインエージェント) 自身が処理
-      handle_inline(ticket)
-
-  # run_role の実装は agent ごとに異なる:
-  #   Claude Code:
-  #     Agent(subagent_type="general-purpose",
-  #           prompt=read(role_prompt)
-  #                  .replace('__TICKET_ID__', ticket.id)
-  #                  .replace('__FILE__', ticket.file)
-  #                  .replace('__TITLE_JA__', ticket.title_ja)
-  #                  .replace('__EPUB_FILENAME__', config.epubFilename))
-  #   Codex 等の単一プロセス agent:
-  #     same template を inline prompt として実行。proof:en-ja は新規セッション (別 codex プロセス) で起動して context 分離する
-  #
-  # 実行後 `bd close` は role agent が行う。失敗時は in_progress のまま残る
-  # 同一章の translation と proof:en-ja を同時に走らせない (ファイル書き込み race を防ぐ)
-  # 戻り後に `bd show <id> --json | jq -r .status` で確認、closed でなければインラインで close
+  # run_role: prompt template に __TICKET_ID__ / __FILE__ / __TITLE_JA__ /
+  # __EPUB_FILENAME__ を埋めて担当 agent に渡す。Claude Code は `Agent` で spawn、
+  # Codex 等は inline 実行 (proof:en-ja のみ新規セッションで context 分離)
+  # 実行後 `bd close` は role agent が行う。failed なら in_progress 残置
+  # 同一章の translation と proof:en-ja は同時起動禁止 (write race)
 ```
 
-メインエージェントとしての行動:
-
-- 各イテレーションで `claim-next-ticket.sh` を呼び、claim 済みチケットの JSON を取得
-- ラベルから種別を判定し、対応する role agent prompt (`agents/<role>-agent.md`) を実行する（Claude Code: `Agent` tool で subagent spawn / 他 agent: inline prompt として読み込み、`proof:en-ja` のみ別セッションで起動）
-- subagent の戻り値 (200 字サマリ) を確認し、次のイテレーションへ
-- ループ中 `bd dolt push && git push` でリモート同期 (10 チケットに 1 度程度)
+メインエージェントは各イテレーションで上を回し、subagent の 200 字サマリを確認して進める。`bd dolt push && git push` は 10 チケット程度に 1 回。
 
 ### 中断・再開時
 
@@ -226,122 +137,70 @@ loop:
 ### Setup フェーズの細部
 
 - **s1** (ディレクトリ準備): `init-project.sh` 出力を確認するだけ
-- **s2** (用語集): orchestrator が [references/glossary-template.md](references/glossary-template.md) を参考に書籍ジャンル別用語を集めて `docs/ja/_glossary.md` を作成。書籍特有の用語を最低 30 件以上、章タイトル一覧を含める
-- **s3** (スタイルガイド): orchestrator が [references/styleguide-template.md](references/styleguide-template.md) をコピーして書籍に合わせて調整
+- **s2** (用語集): orchestrator が [references/templates.md](references/templates.md) の Glossary を参考に書籍ジャンル別用語を集めて `docs/ja/_glossary.md` を作成。書籍特有の用語を最低 30 件以上、章タイトル一覧を含める
+- **s3** (スタイルガイド): orchestrator が [references/templates.md](references/templates.md) の Styleguide をコピーして書籍に合わせて調整
 - **s4** (品質確認): orchestrator が **Translation Agent を 1 度 spawn** して `_sample.md` を生成。8 観点 (proof:en-ja-checklist) でセルフ評価し、Go なら次へ
 
 #### s2 / s3 を自走するか、人間レビューを挟むか
 
-「自動進行で任せたい」と明示された場合は **s2/s3 を orchestrator が自走** で書く。ただし以下のいずれかに該当する場合は、s2/s3 完了後に **ユーザーレビューを 1 回挟むこと** を推奨し、judgement を求める:
+「自動進行で任せたい」と明示されれば **s2/s3 を orchestrator が自走**。ただし以下のいずれかに該当する場合は s2/s3 完了後に **ユーザーレビューを 1 回挟む**: (a) 特殊ドメイン (法律・医学・芸術・人類学 — 訳語選択が訳文全体の品質を左右)、(b) 先行翻訳プロジェクト無しで用語の前例なし、(c) 長大書籍 (章数 30+ または 1 章 20 ページ超)、(d) 「である調以外の文体にしたい」など特殊スタイル要求。
 
-- 書籍が**特殊なドメイン** (法律・医学・芸術・文化人類学など、訳語選択が訳文全体の品質を左右するもの)
-- 同じシリーズの**先行翻訳プロジェクト** (`Vol1→Vol2` のような) が無く、用語の前例がない
-- 書籍が**長大** (章数 30+ または 1 章あたり 20 ページ超)、用語ぶれが後半まで波及してリカバリが高コストになる
-- ユーザーが「である調以外の文体にしたい」など**特殊なスタイル要求**を最初の対話で示している
-
-該当しない場合 (汎用技術書・前作の用語が継承可能・章数 25 以下) は **自走で問題ない**。`_glossary.md` / `_styleguide.md` の更新は途中で発生しても run-time に追記すれば OK で、初版に完璧を求めなくてよい。
+該当しなければ (汎用技術書・前作の用語継承可能・章数 25 以下) **自走で問題ない**。`_glossary.md` / `_styleguide.md` は run-time 追記で OK、初版に完璧を求めなくてよい。
 
 ### Final フェーズ
 
 - `npm run build` 成功確認
 - 用語一貫性 grep (`docs/ja/_glossary.md` の用語が章で統一されているか)
 - である調逸脱チェック: `grep -nE 'です。|ます。' docs/ja/*.md` がゼロ件
-- 代表章 (章番号 1, 中央, 最後) を目視確認 — 可能ならユーザーに promo
-- VitePress dev server (`npm run dev`) で表示確認
-- **内部リンクの整合性チェック** (リンク機能化):
-  ```bash
-  node scripts/fix-internal-links.mjs   # docs/ja の xhtml ref を相対 MD に
-  node scripts/inject-anchors.mjs       # 漏れた figure / table / heading / sidebar id を補完
-  node scripts/check-links.mjs          # 死リンクゼロを確認 (errors=0 必須)
-  ```
-  ローカル dev (`npm run dev`) で章間ジャンプ・図表アンカー・脚注・sidebar を 10 件以上抜き打ちクリック確認
+- 代表章 (1 / 中央 / 最後) を目視確認、`npm run dev` で表示確認
+- **内部リンク整合性**: `fix-internal-links.mjs` (xhtml→相対 MD) → `inject-anchors.mjs` (アンカー補完) → `check-links.mjs` (errors=0 必須)。dev で章間ジャンプ / 図表 / 脚注 / sidebar を 10 件以上抜き打ちクリック
 
 ## 翻訳規約 (要約)
 
-- 文体: **である調** (です・ます禁止)
-- 用語: `docs/ja/_glossary.md` 準拠
-- Markdown 構造: 見出しレベル・リスト・表を保持
-- コードブロック・SQL・テーブル名・書名・著者名: 原文維持
-- 画像参照 `./images/` はそのまま (alt は訳す)
-- 図表参照: 「図N.N」「表N.N」「第N章」「付録N」で統一
-- **内部リンク (xref / figure / table / section / sidebar / 脚注)**:
-  - `xxx.xhtml#anchor` 形式の EPUB 内部参照は `extract-epub.mjs` が自動で `./<NN_slug>.md#anchor` に変換 (内部 `transformHref`)
-  - 図表アンカーは `<a id="..."></a>` (figure / table 直前) または見出しの `{#id}` で定義
-  - 脚注本文側 `<sup>` は `<sup><a id="X-marker"></a>[N](./Y.md#X)</sup>` 形式
-  - table caption は `*Table N-N. ...*` をテーブル直前にイタリック斜体で出力
-  - callout `(N)` の脚注リスト側に `<a id="callout_..."></a>` を保持
-  - 既存プロジェクトの後追い修正: `node scripts/fix-internal-links.mjs && node scripts/inject-anchors.mjs`
-  - リンク機能検証: `node scripts/check-links.mjs` (Final フェーズで必須、errors=0)
+- 文体: **である調** (です・ます禁止)。用語は `docs/ja/_glossary.md` 準拠
+- Markdown 構造・コードブロック・SQL・テーブル名・書名・著者名・`./images/` 参照は原文維持 (画像 alt は訳す)
+- 図表参照は「図N.N」「表N.N」「第N章」「付録N」で統一
+- 内部リンク: `xxx.xhtml#anchor` → `./<NN_slug>.md#anchor` への変換は `extract-epub.mjs` が自動処理。図表アンカー / 脚注 / callout のフォーマット詳細は [references/templates.md](references/templates.md) の Styleguide を参照
+- 後追い修正: `node scripts/fix-internal-links.mjs && node scripts/inject-anchors.mjs`。Final で `node scripts/check-links.mjs` (errors=0 必須)
 
-詳細: `docs/ja/_styleguide.md` (プロジェクト固有) または [references/styleguide-template.md](references/styleguide-template.md) (skill テンプレート)
+詳細: プロジェクト固有の `docs/ja/_styleguide.md` か skill テンプレートの [references/templates.md](references/templates.md) を参照。
 
 ## エージェント分離 (核心設計)
 
-**翻訳と校正は同じプロセス・同じ context で処理してはいけない** (agent 種別を問わず):
-
-- Translation Agent は「自分が選んだ訳語」「自分の訳文構造」に対して**確認バイアス**を持つため、自分の訳を客観的に校正できない
-- 校正は「読んでいない訳文を初見で見て、原文との齟齬を発見する」作業であり、コンテキスト分離が品質の前提条件
-
-skill は各タスクごとに `agents/<role>-agent.md` の prompt template に `__TICKET_ID__`, `__FILE__`, `__TITLE_JA__`, `__EPUB_FILENAME__` を埋め込んで担当 agent に渡す。実装は agent 種別で異なる:
-
-- **Claude Code**: orchestrator が `Agent` tool で `subagent_type="general-purpose"` として spawn する。context が自動分離される
-- **Codex 等の単一プロセス agent**: 同 prompt を inline で読み込んで実行。`proof:en-ja` だけは新規 CLI セッション (別 codex プロセス) で起動して context を分離する
+**翻訳と校正は同じプロセス・同じ context で処理してはいけない** (agent 種別を問わず)。Translation Agent は自分の訳語・訳文構造に **確認バイアス** を持つため、客観的に校正できない。校正は「読んでいない訳文を初見で原文と突き合わせる」作業であり、context 分離が品質の前提。
 
 prompt template と担当ラベル:
 
-| Agent 種別 | prompt template | 担当 |
-|---|---|---|
-| Translation | `agents/translation-agent.md` | translation ラベルのチケット |
-| Proof-EPUB-EN | `agents/proof-epub-en-agent.md` | proof:epub-en ラベル |
-| Proof-EN-JA | `agents/proof-en-ja-agent.md` | proof:en-ja ラベル (translation とは別 subagent で起動) |
+| prompt template | ラベル |
+|---|---|
+| `agents/translation-agent.md` | translation |
+| `agents/proof-epub-en-agent.md` | proof:epub-en |
+| `agents/proof-en-ja-agent.md` | proof:en-ja (translation とは別 subagent / 別セッションで起動) |
 
-prompt 内のプレースホルダ (`__TICKET_ID__`, `__FILE__`, `__TITLE_JA__`, `__EPUB_FILENAME__`) は orchestrator が埋める。
+Claude Code は `Agent` tool で spawn (自動 context 分離)、Codex 等は inline 実行で `proof:en-ja` のみ新規 CLI セッション。プレースホルダは orchestrator が埋める。
 
 ## bd 連携
 
-プロジェクトの `AGENTS.md`（および Claude Code が import する `CLAUDE.md`）に bd 統合ブロックが含まれる場合、ad-hoc TODO リストではなく **`bd` を使う**:
-
-```bash
-bd ready              # 次の作業可能チケット
-bd show <id>          # チケット詳細
-bd update <id> --claim  # 取得
-bd note <id> "..."    # メモ追加
-bd close <id> --reason "..."  # 完了
-bd dolt push          # リモート同期
-bd dolt pull          # 同期取得
-```
-
-orchestrator は `scripts/claim-next-ticket.sh` を使うと race condition なく安全に取得できる。
+プロジェクトの `AGENTS.md` (Claude Code は import 経由) に bd 統合ブロックがあれば、ad-hoc TODO ではなく **`bd` を使う**: `bd ready` / `bd show <id>` / `bd update <id> --claim` / `bd note` / `bd close <id> --reason` / `bd dolt {push,pull}`。orchestrator は `scripts/claim-next-ticket.sh` を使うと race-free に取得できる。
 
 ## Detailed references
 
-- 5 フェーズの依存関係と作業詳細 → [references/workflow-phases.md](references/workflow-phases.md)
-- 抽出 MD 構造校正の 10 項目 → [references/proof-epub-en-checklist.md](references/proof-epub-en-checklist.md)
-- 訳文校正の 11 項目 → [references/proof-en-ja-checklist.md](references/proof-en-ja-checklist.md)
-- コードフラグメント検出 lint (`scripts/check-code-fragments.mjs`) → 抽出/翻訳両方で実行可
-- ファイル名規則と不変条件 → [references/filename-conventions.md](references/filename-conventions.md)
-- extract-epub.mjs CONFIG 埋め方 → [references/extract-epub-customization.md](references/extract-epub-customization.md)
-- EPUB 構造バリエーション (出版社別の anchor 抽出パターン) → [references/epub-variations.md](references/epub-variations.md)
-- gen-tickets.mjs CONFIG 埋め方 → [references/gen-tickets-customization.md](references/gen-tickets-customization.md)
-- 用語集テンプレート → [references/glossary-template.md](references/glossary-template.md)
-- スタイルガイドテンプレート → [references/styleguide-template.md](references/styleguide-template.md)
-- 再校正パターン (extract-epub 改修後) → [references/reproof-pattern.md](references/reproof-pattern.md)
-- **Cloudflare Pages デプロイ詳細** → [references/deploy-cloudflare.md](references/deploy-cloudflare.md)
-- **GitHub Pages デプロイ詳細** → [references/deploy-github-pages.md](references/deploy-github-pages.md)
+3 つの reference ファイルにテーマ別に集約:
+
+- [references/pipeline-customization.md](references/pipeline-customization.md) — 5 フェーズ全体像、extract-epub.mjs / gen-tickets.mjs の CONFIG 埋め方、EPUB 出版社別バリエーション、Cloudflare Pages / GitHub Pages 各デプロイ手順
+- [references/proof-checklists.md](references/proof-checklists.md) — proof:epub-en (10 項目) / proof:en-ja (11 項目) / extract-epub 改修後の reproof パターン
+- [references/templates.md](references/templates.md) — ファイル名規則、用語集テンプレート、スタイルガイドテンプレート
+
+補足: コードフラグメント検出 lint (`scripts/check-code-fragments.mjs`) は抽出/翻訳両方で実行可。
 
 ## Bundled scripts と agents
 
-- `scripts/extract-epub.mjs` — CONFIG 化リファクタ済の EPUB→Markdown 抽出
-- `scripts/gen-tickets.mjs` — CONFIG 化リファクタ済の beads チケット生成
-- `scripts/init-project.sh` — 新規プロジェクト初期化 (assets を雛形コピー+置換、デプロイ先選択対応)
-- `scripts/init-cloudflare-deployment.sh` — Cloudflare Pages 選択時の初回デプロイ + GitHub Secrets 登録
-- `scripts/migrate-to-cloudflare.sh` — 既存 GitHub Pages 構成を Cloudflare Pages + Basic 認証へ切替
-- `scripts/lib/place-cloudflare-assets.sh` — Cloudflare 系テンプレ配置の共通関数
-- `scripts/lib/update-readme-deploy-section.sh` — README の `## 公開先` セクションを冪等更新
+- `scripts/extract-epub.mjs` / `scripts/gen-tickets.mjs` — CONFIG 化された EPUB→MD 抽出 / beads チケット生成
+- `scripts/init-project.sh` — 新規プロジェクト初期化 (assets 配置 + デプロイ先選択対応)
+- `scripts/init-cloudflare-deployment.sh` / `scripts/migrate-to-cloudflare.sh` — Cloudflare 初回デプロイ / GitHub Pages からの移行
+- `scripts/lib/*.sh` — Cloudflare 系テンプレ配置 / README 公開先セクションの冪等更新
 - `scripts/claim-next-ticket.sh` — bd ready 安全取得
-- `agents/translation-agent.md` — Translation Agent の prompt template
-- `agents/proof-epub-en-agent.md` — Proof-EPUB-EN Agent の prompt template
-- `agents/proof-en-ja-agent.md` — Proof-EN-JA Agent の prompt template
+- `agents/{translation,proof-epub-en,proof-en-ja}-agent.md` — 各 role の prompt template
 
 ## proofPhase の選び方 (一般指針)
 
@@ -351,7 +210,7 @@ orchestrator は `scripts/claim-next-ticket.sh` を使うと race condition な�
 | 個人用・社内資料・ドラフト品質で十分 | `'epub-only'` | 抽出 MD の構造のみ確認、訳文校正は手動で代替 |
 | 短い記事・ブログ翻訳 | `'none'` | proof フェーズなし、translation 一発 |
 
-`gen-tickets.mjs` の `CONFIG.proofPhase` で切り替え可能 (詳細は [references/gen-tickets-customization.md](references/gen-tickets-customization.md))。
+`gen-tickets.mjs` の `CONFIG.proofPhase` で切り替え可能 (詳細は [references/pipeline-customization.md](references/pipeline-customization.md) の gen-tickets CONFIG セクション)。
 
 ## skill の独立性
 
@@ -363,7 +222,7 @@ orchestrator は `scripts/claim-next-ticket.sh` を使うと race condition な�
 
 - **新規プロジェクト立ち上げ** — `## Step-by-step` の「### 初回 (新規プロジェクト)」
 - **中断セッションからの復帰** — `## Step-by-step` の「### 中断・再開時」
-- **extract-epub.mjs 改修後の再校正バッチ** — [references/reproof-pattern.md](references/reproof-pattern.md)
+- **extract-epub.mjs 改修後の再校正バッチ** — [references/proof-checklists.md](references/proof-checklists.md) の reproof セクション
 
 ## Troubleshooting
 

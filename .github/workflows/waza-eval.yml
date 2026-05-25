@@ -46,11 +46,12 @@ jobs:
         run: waza tokens check --strict
 
       - name: waza check schema + links + advisory regression gate
-        # Gated advisories must stay passing for every skill. The remaining
-        # advisories (complexity / module-count / cross-model-density) are
-        # accepted as failing by design and intentionally not gated here.
+        # Gated advisories must stay passing for every skill. `complexity` is
+        # intentionally NOT gated: waza hardcodes its threshold (token > 500
+        # OR modules >= 4) in advisory_checks.go and it cannot pass for any
+        # substantive workflow skill without modifying upstream waza source.
         env:
-          GATED_ADVISORIES: '["over-specificity","procedural-content","body-structure"]'
+          GATED_ADVISORIES: '["over-specificity","procedural-content","body-structure","module-count","cross-model-density"]'
         run: |
           set -e
           waza check --format json > check.json
@@ -65,7 +66,7 @@ jobs:
             exit 1
           fi
           if ! jq -e --argjson gated "$GATED_ADVISORIES" '[.skills[] | .advisoryChecks[] | select(.name as $n | $gated | index($n)) | select(.passed == false)] | length == 0' check.json > /dev/null; then
-            echo "::error::a gated advisory regressed (over-specificity / procedural-content / body-structure must stay passing)"
+            echo "::error::a gated advisory regressed (over-specificity / procedural-content / body-structure / module-count / cross-model-density must stay passing)"
             jq --argjson gated "$GATED_ADVISORIES" '.skills[] | {name, regressed: [.advisoryChecks[] | select(.name as $n | $gated | index($n)) | select(.passed == false) | {name, summary}]} | select(.regressed | length > 0)' check.json
             exit 1
           fi

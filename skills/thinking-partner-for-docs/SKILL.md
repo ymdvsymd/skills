@@ -1,28 +1,11 @@
 ---
 name: thinking-partner-for-docs
 description: >-
-  業務文書 (PRD / DesignDoc / ADR / 技術ブログ等) を書き始める前の段階で、
-  思考整理と多視点レビューを伴走する skill。書き手自身が「何を書くべきか」
-  「誰に何を伝えるか」「どんな意思決定のためか」を構造化できるよう、問いを通じて
-  思考を外部化する。最終成果物 (PRD 完成品など) の生成は対象ではない。
-  Step 1: 文書タイプを宣言してもらう。
-  Step 2: 5W1H を 1〜2 個ずつ問い、思考を構造化する。
-  Step 3: 構造案 (見出しレベルのみ) を提示し、評価に進む合意をとる。
-  Step 4: 意思決定者・エンジニア・顧客・運用 (営業/事業) の 4 視点でフラットにレビューする。
-  Step 5: レビュー結果を踏まえてユーザーと差分対話して骨子を整える。
-  以下のトリガーで必ず発動する:
-  「PRD 書き始めたい」「DesignDoc 考えたい」「ADR を起こす前に整理したい」
-  「技術ブログ書く前に整理して」「思考整理を手伝って」「壁打ちして」
-  「いきなり書かずに考えたい」「文書化の準備をして」「観点を一緒に出して」
-  「ステークホルダー視点で問いをぶつけて」「書く前に頭を整理したい」
-  「○○ を書こうとしている」「準備段階を一緒に考えて」「書き始める前に確認したい」。
-  ユーザーが業務文書を書きたいが、構造や中身がまだ固まっていない段階
-  (アイデア・問題意識のみ) であれば、明示的にスキルと言われなくても必ずこれを使う。
-  USE FOR: 業務文書の書き始め前の思考整理、ステークホルダー視点での骨子レビュー、
-  論点の構造化、文書タイプ別の準備質問、思考メモの生成。
-  DO NOT USE FOR: 既に骨子が固まり本文執筆段階に入っている文書 (本文生成用の別 skill が担当)、
-  テンプレ自動穴埋め、PRD/ADR/ブログ完成品を自動出力する用途、コード生成、バグ修正、
-  リファクタリング、コミット作成、短いお知らせやチャット投稿の文面作成。
+  Co-design business documents (PRD/DesignDoc/ADR/技術ブログ) before drafting: structure thinking via 5W1H questions, propose a heading skeleton, then run a 4-stakeholder review (decision-maker / engineer / customer / operations).
+  「PRD 書き始めたい」「DesignDoc 考えたい」「ADR を起こす前に整理したい」「思考整理を手伝って」「壁打ちして」「書く前に頭を整理したい」のような依頼で発動する。
+  USE FOR: 業務文書の書き始め前の思考整理、ステークホルダー視点での骨子レビュー、論点の構造化、思考メモ生成。
+  DO NOT USE FOR: 本文執筆段階の文書 (use tech-blog-from-docs 等)、PRD/ADR の完成品出力、コード生成、リファクタリング、コミット作成、短文チャット投稿。
+  INVOKES: stakeholder-lens questions, 5W1H prompts.
 ---
 
 # Thinking Partner for Docs

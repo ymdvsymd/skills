@@ -1,11 +1,11 @@
 ---
 name: history-report
 description: >-
-  Create Japanese repo-history reports under .history/ from a specified version/time.
-  リポジトリの特定バージョン・時期以降の更新を調査し、.history/ ディレクトリに構造化された日本語ドキュメントを生成する。
-  「.history に書いて」「更新レポートを生成」「v1.10.0 以降の変更を .history/ に」
-  「最近の変更をドキュメント化」「CHANGELOG を .history/ 形式で展開」
-  のような依頼で発動する。git diff, コミット履歴, CHANGELOG の分析を伴う調査・執筆タスクに使う。
+  Create Japanese repo-history reports under .history/ from a specified version or time period.
+  「.history に書いて」「更新レポートを生成」「v1.10.0 以降の変更を .history/ に」「最近の変更をドキュメント化」「CHANGELOG を .history/ 形式で展開」のような依頼で発動する。
+  USE FOR: 指定バージョン・時期以降の変更レポート、CHANGELOG の構造化、git log/diff を題材にした日本語解説、リリース後の振り返りメモ。
+  DO NOT USE FOR: 現在の使い方ドキュメント (use usage-guide instead)、コード生成・リファクタリング、PR レビュー、リアルタイム監視。
+  INVOKES: git log, git diff, CHANGELOG analysis.
 ---
 
 # History Report Generator
