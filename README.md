@@ -11,6 +11,7 @@
 | [`usage-guide`](./skills/usage-guide/SKILL.md) | リポジトリ現在状態を分析し `.usage/` に使い方ドキュメントを生成 |
 | [`sync-with-origin-main`](./skills/sync-with-origin-main/SKILL.md) | rebase → 衝突時 merge fallback で `origin/main` を線形に追従 |
 | [`tech-blog-from-docs`](./skills/tech-blog-from-docs/SKILL.md) | 技術ドキュメント (複数ファイル / ディレクトリ / URL) を素材に why/what/how の 3 部構成で 15-45 分の日本語技術ブログ記事を執筆 |
+| [`thinking-partner-for-docs`](./skills/thinking-partner-for-docs/SKILL.md) | 業務文書 (PRD / DesignDoc / ADR / 技術ブログ等) を書き始める前の思考整理を、4 フェーズ (準備→依頼→評価→調整) + 4 視点 (意思決定者 / エンジニア / 顧客 / 運用) レビューで伴走する |
 | [`worksample-question-generator`](./skills/worksample-question-generator/SKILL.md) | 採用面接のワークサンプル課題と応募者の事前回答から、面接当日に深掘りすべき質問を課題の問いごとに整理した Markdown を生成 |
 
 ## インストール
@@ -49,6 +50,7 @@ APM CLI 自体のインストール、対応 platform (`claude` / `copilot` / `c
 │   ├── history-report/
 │   ├── sync-with-origin-main/
 │   ├── tech-blog-from-docs/
+│   ├── thinking-partner-for-docs/
 │   ├── usage-guide/
 │   └── worksample-question-generator/
 └── skills/
@@ -61,6 +63,7 @@ APM CLI 自体のインストール、対応 platform (`claude` / `copilot` / `c
     ├── history-report/
     ├── sync-with-origin-main/
     ├── tech-blog-from-docs/
+    ├── thinking-partner-for-docs/
     ├── usage-guide/
     └── worksample-question-generator/
 ```

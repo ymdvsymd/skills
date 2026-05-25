@@ -1,0 +1,14 @@
+id: thinking-partner-for-docs-tech-blog-prep
+name: "tech-blog-prep"
+tags:
+  - "positive-trigger"
+
+inputs:
+  prompt: |-
+    技術ブログを書く前に整理したい。先月導入した OpenTelemetry の話を社内テクノ場で紹介したい。30 分で読める長さの予定。観点が散らかっているので、何を主軸に書くべきか壁打ちしてほしい。本文はまだ書かない。
+
+expected:
+  outcomes:
+    - type: task_completed
+  behavior:
+    max_tool_calls: 100

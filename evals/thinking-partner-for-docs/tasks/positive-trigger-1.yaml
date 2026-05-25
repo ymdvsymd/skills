@@ -1,0 +1,14 @@
+id: thinking-partner-for-docs-prd-prep
+name: "prd-prep"
+tags:
+  - "positive-trigger"
+
+inputs:
+  prompt: |-
+    社内向け承認フロー改善ツールの PRD を書きたい。経費精算が遅いことが課題で、経理から苦情が来ている。これから書き始めたいので、構造から一緒に考えてほしい。最終的なドキュメントは Linear に公開する想定。
+
+expected:
+  outcomes:
+    - type: task_completed
+  behavior:
+    max_tool_calls: 100

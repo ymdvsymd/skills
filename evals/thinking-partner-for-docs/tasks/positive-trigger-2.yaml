@@ -1,0 +1,14 @@
+id: thinking-partner-for-docs-adr-prep
+name: "adr-prep"
+tags:
+  - "positive-trigger"
+
+inputs:
+  prompt: |-
+    ADR を起こす前に整理したい。テスト基盤を Jest から Vitest に置き換える件で、チーム内で議論しているが論点が散らかってきた。Michael Nygard 形式で書く予定。Context / Decision / Consequences のうち、特に Consequences が薄くなりそうで不安。
+
+expected:
+  outcomes:
+    - type: task_completed
+  behavior:
+    max_tool_calls: 100

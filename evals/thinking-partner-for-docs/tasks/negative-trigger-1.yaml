@@ -1,0 +1,14 @@
+id: thinking-partner-for-docs-code-fix-not-triggered
+name: "code-fix-not-triggered"
+tags:
+  - "negative-trigger"
+
+inputs:
+  prompt: |-
+    lib/auth.ts の login 関数で null pointer exception が出ている。スタックトレースを見ると line 42 の getUser() が undefined を返している。直してほしい。
+
+expected:
+  outcomes:
+    - type: task_completed
+  behavior:
+    max_tool_calls: 100
