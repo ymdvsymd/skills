@@ -133,13 +133,21 @@ function continuationIndent(strippedLines) {
 
 // --- 検査対象ペアの解決 ---
 
+// 抽出章のみを対象にする。除外:
+//   _*.md     用語集・スタイルガイド等 (VitePress サイドバーからも除外される)
+//   index.md  VitePress の landing page (カバー画像 / 手書き TOC)。EPUB から抽出した章ではなく
+//             en/ja で構造が意図的に異なる (EN=カバー画像のみ・JA=翻訳済み目次) ため、
+//             見出し/フェンスのパリティ対象にすると恒常的な false positive になる。
+const isChapterFile = (base) =>
+  base.endsWith('.md') && !base.startsWith('_') && base !== 'index.md';
+
 function resolvePairs() {
   if (fileArgs.length) {
     const seen = new Set();
     const out = [];
     for (const a of fileArgs) {
       const base = basename(a).replace(/\.md$/, '') + '.md';
-      if (base.startsWith('_')) continue;
+      if (!isChapterFile(base)) continue;
       if (seen.has(base)) continue;
       seen.add(base);
       out.push(base);
@@ -149,9 +157,7 @@ function resolvePairs() {
   const enDir = join(REPO_ROOT, 'docs', 'en');
   if (!existsSync(enDir)) return [];
   // SKILL.md の不変条件: docs/en と docs/ja は同名ファイルで 1:1 対応 (ASCII ソート順一致)。
-  return readdirSync(enDir)
-    .filter((f) => f.endsWith('.md') && !f.startsWith('_'))
-    .sort();
+  return readdirSync(enDir).filter(isChapterFile).sort();
 }
 
 // --- 単一ペアの検査 ---
