@@ -61,13 +61,11 @@ EPUB spine 順 == FILENAME_MAP の値の NN 順 == docs/en/ ASCII ソート順 =
 
 サポートするデプロイ先は **GitHub Pages（公開）** と **Cloudflare Pages + Basic 認証（関係者限定）** の 2 通り。
 
-**`init-project.sh` での確定優先順**: (1) `--deploy-target=cloudflare|github` 明示指定 → (2) 環境変数 `DEPLOY_TARGET` → (3) `gh repo view --json visibility` で自動判定 (PRIVATE→cloudflare, PUBLIC→github) → (4) tty 対話プロンプト → (5) tty 無しで判定不能なら exit 1。
+**`init-project.sh` での確定優先順**: (1) `--deploy-target=cloudflare|github` 明示 → (2) 環境変数 `DEPLOY_TARGET` → (3) `gh repo view --json visibility` で自動判定 (PRIVATE→cloudflare, PUBLIC→github) → (4) tty 対話プロンプト → (5) tty 無しで判定不能なら exit 1。
 
-**orchestrator の振る舞い**: ユーザー入力の語彙を翻訳して `--deploy-target=...` に渡す。「Cloudflare/Basic 認証/内部限定/関係者だけに/private で公開」→ cloudflare。「GitHub Pages/公開で/OSS として/オープンに」→ github。明示なし & 自動判定不能なら **人間に確認** (多くの agent CLI の Bash 実行は tty を持たないので、対話 read プロンプトに到達させない)。
+**orchestrator の振る舞い**: ユーザー入力の語彙を `--deploy-target=...` に翻訳する。「Cloudflare/Basic 認証/内部限定/関係者だけに/private で公開」→ cloudflare、「GitHub Pages/公開で/OSS として/オープンに」→ github。明示なし & 自動判定不能なら **人間に確認** (agent CLI の Bash は tty を持たないことが多く、対話 read プロンプトに到達させない)。
 
-**Cloudflare 選択時**: `.env.local` に `CLOUDFLARE_API_TOKEN` (`Pages > Edit` 必須) / `CLOUDFLARE_ACCOUNT_ID` / `BASIC_AUTH_USER` / `BASIC_AUTH_PASS` を入れ、`bash $SKILL_DIR/scripts/init-cloudflare-deployment.sh` を 1 回実行。配信 URL は `https://<RANDOM_16_CHARS>.pages.dev/` (プロジェクト名はデフォルトでランダム英数字 16 字、`--cloudflare-project-name=<name>` で上書き可能)。前提として **private リポジトリ運用**。完全な隠蔽が要件なら **Cloudflare Access** に切替 (独自ドメイン + Access ポリシー、`functions/_middleware.ts` 削除のみで移行可能)。
-
-**既存 GitHub Pages → Cloudflare 移行**: `bash $SKILL_DIR/scripts/migrate-to-cloudflare.sh` → `.env.local` 編集 → `--continue` で完了。旧 workflow 削除・base 行削除・Cloudflare 系配置・初回デプロイ・Secrets 登録・gh-pages 削除・README 更新まで一気通貫。
+**Cloudflare 選択時**: `.env.local` に `CLOUDFLARE_API_TOKEN` (`Pages > Edit`) / `CLOUDFLARE_ACCOUNT_ID` / `BASIC_AUTH_USER` / `BASIC_AUTH_PASS` を入れ `bash $SKILL_DIR/scripts/init-cloudflare-deployment.sh` を 1 回実行。配信 URL は `https://<RANDOM_16_CHARS>.pages.dev/` (`--cloudflare-project-name=<name>` で上書き可)。**private リポジトリ運用**が前提。完全な隠蔽が要件なら **Cloudflare Access** に切替 (`functions/_middleware.ts` 削除のみで移行可)。**既存 GitHub Pages → 移行**は `bash $SKILL_DIR/scripts/migrate-to-cloudflare.sh` → `.env.local` 編集 → `--continue` (旧 workflow 削除・base 行削除・配置・初回デプロイ・Secrets 登録・gh-pages 削除・README 更新まで一気通貫)。
 
 詳細は [references/pipeline-customization.md](references/pipeline-customization.md) の Deploy セクション。
 
@@ -84,14 +82,13 @@ EPUB spine 順 == FILENAME_MAP の値の NN 順 == docs/en/ ASCII ソート順 =
        [--deploy-target=cloudflare|github] [--cloudflare-project-name=<name>]
    ```
 
-   `$SKILL_DIR` は agent ごとに異なる (Claude Code: `~/.claude/skills/.../`、Codex / APM cross-client: `~/.codex/skills/.../` または `~/.agents/skills/.../`)。配置物: `README.md` / `package.json` / `AGENTS.md` (canonical) + `CLAUDE.md` import / `docs/.vitepress/` / `docs/{index.md,ja/index.md}` / `scripts/{extract-epub,gen-tickets,claim-next-ticket}*`。デプロイ先別の workflow と Cloudflare 系ファイルも同時配置 (`vitepress-config.mts` の `base:` は Cloudflare 時自動削除)。
+   `$SKILL_DIR` は agent ごとに異なる (Claude Code: `~/.claude/skills/.../`、Codex / APM cross-client: `~/.codex/skills/.../` か `~/.agents/skills/.../`)。配置物: `README.md` / `package.json` / `AGENTS.md` (canonical) + `CLAUDE.md` import / `docs/.vitepress/` / `docs/{index.md,ja/index.md}` / `scripts/{extract-epub,gen-tickets,claim-next-ticket}*`、デプロイ先別 workflow と Cloudflare 系ファイル (`vitepress-config.mts` の `base:` は Cloudflare 時自動削除)。
 
-2. **EPUB 配置と依存インストール**: `cp /path/to/book.epub docs/<epub>.epub && npm install`。`.github/workflows/*.yml` は `branches: [main, master]` 両対応。GitHub Pages なら `Settings → Pages → Source: GitHub Actions` 有効化のみ。Cloudflare なら `.env.local` 編集 + `bash $SKILL_DIR/scripts/init-cloudflare-deployment.sh` 1 回実行 ([references/pipeline-customization.md](references/pipeline-customization.md) の Deploy セクション参照)。
+2. **EPUB 配置と依存インストール**: `cp /path/to/book.epub docs/<epub>.epub && npm install`。`.github/workflows/*.yml` は `branches: [main, master]` 対応。GitHub Pages なら `Settings → Pages → Source: GitHub Actions` 有効化のみ、Cloudflare なら `.env.local` 編集 + `bash $SKILL_DIR/scripts/init-cloudflare-deployment.sh` を 1 回実行。
 
 3. **extract-epub.mjs CONFIG 編集** ([references/pipeline-customization.md](references/pipeline-customization.md) の extract-epub CONFIG セクション参照)
    - `epubFilename`, `opfPath`, `filenameMap`, `parser.*` を埋める
-   - `node scripts/extract-epub.mjs --dry-run` で検証
-   - `node scripts/extract-epub.mjs` で本番実行
+   - `node scripts/extract-epub.mjs --dry-run` で検証 → 引数なしで本番実行
 
 4. **用語集・スタイルガイド作成** (Setup s2/s3 — orchestrator 自身が担当)
    - `docs/ja/_glossary.md`: [references/templates.md](references/templates.md) の Glossary Template を参照して書籍ジャンル別用語をまとめる
@@ -99,9 +96,7 @@ EPUB spine 順 == FILENAME_MAP の値の NN 順 == docs/en/ ASCII ソート順 =
 
 5. **gen-tickets.mjs CONFIG 編集** ([references/pipeline-customization.md](references/pipeline-customization.md) の gen-tickets CONFIG セクション参照)
    - `chapterTitleJa`, `specialTitleJa`, `prioritizeP1`, `proofPhase` を埋める
-   - `bd init` (まだなら)
-   - `node scripts/gen-tickets.mjs --dry-run` で確認
-   - `node scripts/gen-tickets.mjs` で本番起票
+   - `bd init` (まだなら) → `node scripts/gen-tickets.mjs --dry-run` で確認 → 引数なしで本番起票
 
 6. **オーケストレーションループ突入** (下記)
 
@@ -143,9 +138,9 @@ loop:
 
 #### s2 / s3 を自走するか、人間レビューを挟むか
 
-「自動進行で任せたい」と明示されれば **s2/s3 を orchestrator が自走**。ただし以下のいずれかに該当する場合は s2/s3 完了後に **ユーザーレビューを 1 回挟む**: (a) 特殊ドメイン (法律・医学・芸術・人類学 — 訳語選択が訳文全体の品質を左右)、(b) 先行翻訳プロジェクト無しで用語の前例なし、(c) 長大書籍 (章数 30+ または 1 章 20 ページ超)、(d) 「である調以外の文体にしたい」など特殊スタイル要求。
+「自動進行で任せたい」と明示されれば **s2/s3 を orchestrator が自走**。ただし以下のいずれかに該当する場合は s2/s3 完了後に **ユーザーレビューを 1 回挟む**: (a) 特殊ドメイン (法律・医学・芸術・人類学)、(b) 先行翻訳プロジェクト無しで用語の前例なし、(c) 長大書籍 (章数 30+ または 1 章 20 ページ超)、(d) である調以外の文体など特殊スタイル要求。
 
-該当しなければ (汎用技術書・前作の用語継承可能・章数 25 以下) **自走で問題ない**。`_glossary.md` / `_styleguide.md` は run-time 追記で OK、初版に完璧を求めなくてよい。
+該当しなければ (汎用技術書・用語継承可能・章数 25 以下) **自走で問題ない**。`_glossary.md` / `_styleguide.md` は run-time 追記で OK、初版に完璧を求めなくてよい。
 
 ### Final フェーズ
 
@@ -161,14 +156,14 @@ loop:
 - 文体: **である調** (です・ます禁止)。用語は `docs/ja/_glossary.md` 準拠
 - Markdown 構造・コードブロック・SQL・テーブル名・書名・著者名・`./images/` 参照は原文維持 (画像 alt は訳す)
 - 図表参照は「図N.N」「表N.N」「第N章」「付録N」で統一
-- 内部リンク: `xxx.xhtml#anchor` → `./<NN_slug>.md#anchor` への変換は `extract-epub.mjs` が自動処理。図表アンカー / 脚注 / callout のフォーマット詳細は [references/templates.md](references/templates.md) の Styleguide を参照
+- 内部リンク: `xxx.xhtml#anchor` → `./<NN_slug>.md#anchor` は `extract-epub.mjs` が自動変換。図表アンカー / 脚注 / callout の詳細は [references/templates.md](references/templates.md) の Styleguide を参照
 - 後追い修正: `node scripts/fix-internal-links.mjs && node scripts/inject-anchors.mjs`。Final で `node scripts/check-links.mjs` (errors=0 必須)
 
 詳細: プロジェクト固有の `docs/ja/_styleguide.md` か skill テンプレートの [references/templates.md](references/templates.md) を参照。
 
 ## エージェント分離 (核心設計)
 
-**翻訳と校正は同じプロセス・同じ context で処理してはいけない** (agent 種別を問わず)。Translation Agent は自分の訳語・訳文構造に **確認バイアス** を持つため、客観的に校正できない。校正は「読んでいない訳文を初見で原文と突き合わせる」作業であり、context 分離が品質の前提。
+**翻訳と校正は同じ context で処理してはいけない** (agent 種別を問わず)。Translation Agent は自分の訳語・訳文構造に **確認バイアス** を持つため客観的に校正できない。校正は「未読の訳文を初見で原文と突き合わせる」作業であり、context 分離が品質の前提。
 
 prompt template と担当ラベル:
 
@@ -194,7 +189,7 @@ proof:en-ja agent を spawn する際は、完了条件に `node scripts/check-s
 - [references/proof-checklists.md](references/proof-checklists.md) — proof:epub-en (11 項目) / proof:en-ja (12 項目) / extract-epub 改修後の reproof パターン
 - [references/templates.md](references/templates.md) — ファイル名規則、用語集テンプレート、スタイルガイドテンプレート
 
-補足: コードフラグメント検出 lint (`scripts/check-code-fragments.mjs`) は抽出/翻訳両方で実行可。構造パリティ検査 (`scripts/check-structure-parity.mjs`) は proof:epub-en (#11) / proof:en-ja (#12) / Final で en/ja の構造整合を機械チェックする。
+補足: `scripts/check-code-fragments.mjs` (コードフラグメント検出 lint) は抽出/翻訳両方で、`scripts/check-structure-parity.mjs` (en/ja 構造整合) は proof:epub-en (#11) / proof:en-ja (#12) / Final で実行する。
 
 ## Bundled scripts と agents
 
@@ -218,17 +213,15 @@ proof:en-ja agent を spawn する際は、完了条件に `node scripts/check-s
 
 ## skill の独立性
 
-この skill は**自己完結**している。`scripts/`, `references/`, `assets/`, `agents/` のすべての作業に必要なコンテンツが skill ディレクトリ内に揃っているため、ユーザーの環境に過去の翻訳プロジェクトが**存在しなくても動作する**。SKILL.md 内に出てくる書籍タイトルや既存プロジェクト名は、ユーザーが「同種のプロジェクト経験を想起する」ためのキーワードに過ぎず、skill 動作の前提ではない。
+この skill は**自己完結**している。`scripts/`, `references/`, `assets/`, `agents/` に必要なコンテンツが揃っており、過去の翻訳プロジェクトが**存在しなくても動作する**。本文中の書籍タイトルや既存プロジェクト名は想起用のキーワードに過ぎず、動作の前提ではない。
 
 ## Examples
 
-代表ケースは既存セクションに集約されている:
-
-- **新規プロジェクト立ち上げ** — `## Step-by-step` の「### 初回 (新規プロジェクト)」
+- **新規プロジェクト立ち上げ** — `## Step-by-step` の「### 初回」
 - **中断セッションからの復帰** — `## Step-by-step` の「### 中断・再開時」
 - **extract-epub.mjs 改修後の再校正バッチ** — [references/proof-checklists.md](references/proof-checklists.md) の reproof セクション
 
 ## Troubleshooting
 
-- **Note:** translation / proof は別 subagent で実行する (確認バイアス回避)。詳細は `agents/translation-agent.md`, `agents/proof-en-ja-agent.md`, `agents/proof-epub-en-agent.md`
-- **Important:** rate limit 復帰や長セッション再開で取りこぼした場合は `bd ready` で再開できる。失敗時の調査は `## Detailed references` を参照
+- **Note:** translation / proof は別 subagent で実行する (確認バイアス回避、詳細は `## エージェント分離`)
+- **Important:** rate limit 復帰や長セッション再開での取りこぼしは `bd ready` で再開できる。失敗時の調査は `## Detailed references` を参照
