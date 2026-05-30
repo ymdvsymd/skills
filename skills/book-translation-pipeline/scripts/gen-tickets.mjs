@@ -119,17 +119,21 @@ function prioritize(stem) {
   return CONFIG.prioritizeP1.includes(stem) ? 1 : 2;
 }
 
-// proof:epub-en の説明本文
-const PROOF_EPUB_CHECKLIST = `## 校正観点 (8項目すべて確認)
+// proof:epub-en の説明本文。
+// この 11 項目は agents/proof-epub-en-agent.md / references/proof-checklists.md と同一に保つこと (更新時は 3 箇所同時に)。
+const PROOF_EPUB_CHECKLIST = `## 校正観点 (11項目すべて確認)
 
 1. **構造保持**: H1〜H4 が原文 XHTML の \`p.chaptertitle\` / \`p.h1\`〜\`p.h5\` と一致しているか
 2. **段落の欠落なし**: 原文 \`<p>\` の段落・センテンスが脱落していないか
 3. **画像参照**: \`![alt](./images/...)\` の参照先が \`docs/en/images/\` に実在するか
 4. **表組み**: パイプ記法に列ずれ・セル抜けがないか
-5. **特殊ブロック**: Note (\`> **Note**\`) / figurecaption (\`*Figure X.X*\`) / tablecaption が保持されているか
+5. **特殊ブロック**: Note (\`> **Note**\`) / Sidebar (\`> **Sidebar: <title>**\`) / figurecaption (\`*Figure X.X*\`) / tablecaption を保持。サイドバーは必ず \`> **Sidebar: <title>**\` 形式で Note と判別可能 (extract-epub fix C)。Recap 系の \`<dt>\` 小見出しが \`> **小見出し**\` として残る (fix B)。本文全行を \`>\` で blockquote 化 (空区切りは bare \`>\` / fix D)
 6. **インライン書式**: \`**bold**\` / \`*italic*\` / \`<sup>\` が原文 HTML 由来で正しく対応しているか
 7. **エンティティ展開**: \`&amp;\` / \`&mdash;\` 等が Unicode に展開されているか
-8. **ノイズ混入なし**: 著作権表示・ページ番号・CSS 残骸が本文に紛れていないか
+8. **ノイズ混入なし**: 著作権表示・ページ番号・CSS 残骸・透かし文字が本文に紛れていないか
+9. **内部リンク・アンカー**: \`xxx.xhtml#anchor\` 残存ゼロ、figure/table/heading/sidebar/callout/脚注 sup ref のアンカー保持 (\`node scripts/inject-anchors.mjs --en-only\` / \`node scripts/check-links.mjs\`)
+10. **コードブロック整合**: \`node scripts/check-code-fragments.mjs docs/en/<file>\` が exit 0。\`>\` 内に \`>    text\` の 4 スペース以上の不正インデント残存なし (extract-epub fix A 回帰)
+11. **構造パリティ**: \`node scripts/check-structure-parity.mjs docs/en/<file>\` が hard mismatch ゼロ
 
 ## 進め方
 
@@ -138,23 +142,27 @@ const PROOF_EPUB_CHECKLIST = `## 校正観点 (8項目すべて確認)
 3. 軽微な問題は \`docs/en/<file>.md\` に直接修正、構造的な不具合は \`scripts/extract-epub.mjs\` の修正 follow-up を起票
 4. notes に発見した問題と対応を簡潔に記録`;
 
-// proof:en-ja の説明本文
-const PROOF_JA_CHECKLIST = `## 校正観点 (9項目すべて確認)
+// proof:en-ja の説明本文。
+// この 12 項目は agents/proof-en-ja-agent.md / references/proof-checklists.md と同一に保つこと (更新時は 3 箇所同時に)。
+const PROOF_JA_CHECKLIST = `## 校正観点 (12項目すべて確認)
 
-1. **訳漏れなし**: 原文の段落・見出しが全て訳出されているか
+1. **訳漏れなし**: 原文の段落・見出しが全て訳出されているか。「未訳」と判断する前に必ず \`grep -nF "<原文中の識別子・固有名詞>" docs/ja/<file>\` で実テキスト不在を確認 (訳語置換済みを未訳と誤認しない = 確認バイアス回避)
 2. **誤訳なし**: 主述・否定・複数形・受動態の誤読がないか、専門用語の文脈解釈が正しいか
 3. **用語一貫性**: \`docs/ja/_glossary.md\` 記載用語の表記が統一されているか
 4. **文体**: である調統一、「です」「ます」「だろう」が混入していないか
-5. **Markdown 構造**: 見出しレベル・リスト・表・画像 alt が原文と完全一致しているか
+5. **Markdown 構造**: 見出しレベル・リスト・表・画像 alt が原文と完全一致。見出しレベル列を \`diff <(grep -E '^#+' docs/en/<file>) <(grep -E '^#+' docs/ja/<file>)\` で確認。番号付きリスト (\`1.\` \`2.\`) が平文段落に潰れていないか
 6. **図表参照**: 「図N.N」「表N.N」「第N章」表記が統一されているか
 7. **原文維持**: コードブロック・SQL・カラム名・書名・著者名は翻訳していないか
 8. **数値・年号**: 数値・日付・パーセント表記が原文と一致しているか
-9. **日本語表現の自然さ**: 直訳臭・てにをは・主述ねじれ・読点配置・カタカナ漢語の混在を是正、用語の現代的妥当性 (例: "後付" は誤り → "巻末") を確認 (詳細: book-translation-pipeline skill の references/proof-en-ja-checklist.md #9)
+9. **日本語表現の自然さ**: 直訳臭・てにをは・主述ねじれ・読点配置・カタカナ漢語の混在を是正、用語の現代的妥当性 (例: "後付" は誤り → "巻末") を確認 (詳細: references/proof-checklists.md proof:en-ja #9)
+10. **内部リンクの機能**: \`xxx.xhtml#anchor\` 残存ゼロ、figure/table/heading/sidebar/脚注のアンカーが \`<a id>\` / \`{#id}\` で定義 (\`node scripts/fix-internal-links.mjs && node scripts/inject-anchors.mjs && node scripts/check-links.mjs\`)
+11. **コードブロック整合**: en/ja で \`\`\` フェンス件数が一致 (\`grep -c '^\`\`\`' docs/{en,ja}/<file>\`)。\`node scripts/check-code-fragments.mjs docs/ja/<file>\` が exit 0
+12. **構造パリティ**: \`node scripts/check-structure-parity.mjs <file>\` を実行。hard (C1 サイドバー個数 / C2 フェンス数 / C3 フェンス開閉 / C4 見出しレベル列) は exit 1 で必ず修正。warn (C5 MD009 / C6 MD028 / C7 番号リスト / C8 引用内太字小見出し = Recap 脱落の疑い / C9) は 1 件ずつ精査。markdownlint MD009/MD028 を新たに混入しない (空区切りは bare \`>\`)
 
 ## 進め方
 
 1. \`docs/en/<file>.md\` と \`docs/ja/<file>.md\` を並べて対比
-2. 観点 1〜9 を順に確認 (1〜8 は原文整合、9 は日本語表現の自然さ)
+2. 観点 1〜12 を順に確認 (1〜8 は原文整合、9 は日本語表現の自然さ、10 はリンク機能、11 はコード整合、12 は機械検査)
 3. 問題箇所は \`docs/ja/<file>.md\` に直接修正
 4. notes に修正した観点と件数を簡潔に記録 (例: \`#9 候補12件中8件修正\`)`;
 
@@ -312,8 +320,8 @@ ${CONFIG.glossarySetupHint}
 1. 代表章 (推奨: 序文または introduction) の冒頭1セクションを選定
 2. _glossary.md / _styleguide.md に従って翻訳
 3. docs/ja/_sample.md に保存
-4. 8観点 (proof:en-ja の校正観点) でセルフチェック
-5. Go 判定: 8観点をクリアしていれば translation フェーズ着手可
+4. proof:en-ja の主要校正観点 (訳漏れ・誤訳・用語・文体・Markdown 構造) でセルフチェック
+5. Go 判定: 主要観点をクリアしていれば translation フェーズ着手可
 
 ## Go 判定基準
 - 訳漏れなし、誤訳なし
@@ -326,7 +334,7 @@ ${CONFIG.glossarySetupHint}
     parent: epicId,
     labels: ['setup', 'translation'],
     deps: [s1, s2, s3],
-    acceptance: '_sample.md が作成され、8観点クリアの Go 判定が notes に記録されていること。',
+    acceptance: '_sample.md が作成され、主要観点クリアの Go 判定が notes に記録されていること。',
   });
 
   console.log(`Setup: ${s1}, ${s2}, ${s3}, ${s4}`);
@@ -383,7 +391,7 @@ ${PROOF_EPUB_CHECKLIST}`,
         priority,
         parent: epicId,
         labels: ['proof:epub-en', `size:${f.size}`, ...(f.chNum !== null ? [`chapter:${String(f.chNum).padStart(2, '0')}`] : []), `seq:${String(f.seqNum).padStart(2, '0')}`],
-        acceptance: '校正観点 8項目すべてクリアしていることを notes に記録すること。問題があれば修正済み、または follow-up チケットを起票していること。',
+        acceptance: '校正観点 11項目すべてクリアしていることを notes に記録すること。問題があれば修正済み、または follow-up チケットを起票していること。',
       });
       proofEpubIds.push(id);
       console.log(`  ProofEpub: ${id} — ${f.file}`);
@@ -415,7 +423,7 @@ ${PROOF_JA_CHECKLIST}`,
         parent: epicId,
         labels: ['proof:en-ja', `size:${f.size}`, ...(f.chNum !== null ? [`chapter:${String(f.chNum).padStart(2, '0')}`] : []), `seq:${String(f.seqNum).padStart(2, '0')}`],
         deps: [transIds[i]],
-        acceptance: '校正観点 8項目すべてクリアしていることを notes に記録すること。問題箇所は docs/ja/ に直接修正済みであること。',
+        acceptance: '校正観点 12項目すべてクリアしていることを notes に記録すること。問題箇所は docs/ja/ に直接修正済みであること。check-structure-parity が hard mismatch ゼロであること。',
       });
       proofJaIds.push(id);
       console.log(`  ProofJa:   ${id} — ${f.file}`);
@@ -437,13 +445,15 @@ ${PROOF_JA_CHECKLIST}`,
 4. 用語一貫性: \`_glossary.md\` 記載用語が全章で統一されていること
 5. 文体: \`grep -c "です。\\|ます。" docs/ja/*.md\` で逸脱がないこと
 6. 代表章を目視確認
-7. \`docs/ja/_sample.md\` の Go 判定が保持されていること`,
+7. \`docs/ja/_sample.md\` の Go 判定が保持されていること
+8. 構造パリティ: \`node scripts/check-structure-parity.mjs\` (全 en/ja ペア) で hard mismatch ゼロ (サイドバー個数・コードフェンス数・見出しレベルが en/ja 整合)。warn は内容確認
+9. 内部リンク: \`node scripts/check-links.mjs\` で死リンクゼロ`,
     type: 'task',
     priority: 1,
     parent: epicId,
     labels: ['final', 'translation'],
     deps: finalDeps,
-    acceptance: `npm run build が成功し、全 ${translationTargets.length} 翻訳ターゲットの日本語版が VitePress 上で正常表示されること。`,
+    acceptance: `npm run build が成功し、全 ${translationTargets.length} 翻訳ターゲットの日本語版が VitePress 上で正常表示されること。check-structure-parity.mjs が hard mismatch ゼロ、check-links.mjs が死リンクゼロであること。`,
   });
 
   console.log(`Final: ${finalId}`);

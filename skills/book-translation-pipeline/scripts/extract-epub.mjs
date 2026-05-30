@@ -282,7 +282,13 @@ function convertInline(html) {
     if (/^<a\s+id="[^"]+"\s*>$/i.test(tag) || /^<\/a>$/i.test(tag)) return tag;
     return '';
   });
-  return decodeEntities(s).trim();
+  s = decodeEntities(s);
+  // 整形済みソース HTML 由来の継続行インデント (例: <dd><p> 内の "...coverage,\n    runtime,") を除去する。
+  // Markdown では行頭の余分な空白がコードブロック扱い/不要なインデントになるため、改行直後の空白を畳む。
+  // convertInline はプローズ用 (見出し・段落・リスト項目・表セル・ノート本文) で行頭空白に意味はなく、
+  // コードは convertCodeBlock の別経路でインデントを保持するため安全。
+  s = s.replace(/\n[ \t]+/g, '\n');
+  return s.trim();
 }
 
 // --- Code block (<pre>) 変換 ---
@@ -311,25 +317,28 @@ function convertOReillyNote(divHtml, label) {
   const innerM = divHtml.match(/<div[^>]*>([\s\S]*)<\/div>/);
   if (!innerM) return '';
   let body = innerM[1];
-  // sidebar の場合、先頭 <h5> をタイトルとして抽出 (label を上書き)
+  // sidebar の場合、先頭 <h5> をタイトルとして抽出し、label を前置する
   // 注: <h6>Warning</h6> 等の削除より先に行わないと、h5 がそこで消費されてしまう
   let title = label;
   if (label === 'Sidebar') {
     const h5M = body.match(/<h5[^>]*>([\s\S]*?)<\/h5>/i);
     if (h5M) {
-      title = convertInline(h5M[1]);
+      // O'Reilly の <aside data-type="sidebar"> をラベル付きで描画し、Note (`> **Note**`) と
+      // 機械判別できるようにする。EN: "> **Sidebar: <title>**" / 日本語訳は "> **コラム: <title>**"。
+      title = `${label}: ${convertInline(h5M[1])}`;
       body = body.replace(/<h5[^>]*>[\s\S]*?<\/h5>/i, '');
     }
   } else {
     // それ以外は先頭の <h6>Warning</h6> 等は label と重複するので削除
     body = body.replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/i, '');
   }
-  const lines = [`> **${title}**`, '> '];
+  // 空の引用区切り行は bare '>' で出力する (markdownlint MD009: '> ' は末尾スペース1個で違反)。
+  const lines = [`> **${title}**`, '>'];
   // 子要素 <p>|<pre>|<ul>|<ol> を順序通り処理する。
   // 注: regex は <p\b...> として word boundary を要求する。<p[^>]*> だと <pre data-type="...">
   // にも誤マッチし、<pre> の中身が <p> の続きとして捕捉されてしまう (各 <code> 子要素が
   // 個別バッククォートに変換され、`def` `allocate``(``line`... のような断片化出力になる)。
-  const childRegex = /<(p|pre|ul|ol)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
+  const childRegex = /<(p|pre|ul|ol|dt)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
   for (const m of body.matchAll(childRegex)) {
     const tag = m[1].toLowerCase();
     let text;
@@ -337,6 +346,11 @@ function convertOReillyNote(divHtml, label) {
       text = convertCodeBlock(m[0]);
     } else if (tag === 'p') {
       text = convertInline(m[3]);
+    } else if (tag === 'dt') {
+      // O'Reilly の Recap 系サイドバーは <dl><dt>小見出し</dt><dd><p>本文</p></dd> 構造。
+      // <dt> を太字の小見出しとして描画する。calloutlist の <dt> (<a class="co"> マーカーのみで
+      // タイトル文字を持たない) は除外し、空 text として下の if (text) でスキップさせる。
+      text = /class="co"/.test(m[3]) ? '' : `**${convertInline(m[3])}**`;
     } else if (tag === 'ul') {
       const items = [...m[3].matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)]
         .map(lm => `- ${convertInline(lm[1])}`);
@@ -348,12 +362,13 @@ function convertOReillyNote(divHtml, label) {
     }
     if (text) {
       for (const line of text.split('\n')) {
-        lines.push('> ' + line);
+        // 空行は bare '>' (末尾スペースを残さない / MD009)。本文行は '> 内容'。
+        lines.push(line === '' ? '>' : '> ' + line);
       }
-      lines.push('> ');
+      lines.push('>');
     }
   }
-  while (lines[lines.length - 1] === '> ') lines.pop();
+  while (lines[lines.length - 1] === '>') lines.pop();
   return lines.join('\n');
 }
 
@@ -425,7 +440,7 @@ function convertNote(noteHtml) {
     } else if (/listnumbered/.test(cls)) {
       lines.push(`> ${text.replace(/^\d+\.\s*/, '')}`);
     } else {
-      lines.push('> ');
+      lines.push('>'); // 空の引用区切りは bare '>' (MD009)
       lines.push(`> ${text}`);
     }
   }

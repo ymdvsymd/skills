@@ -42,7 +42,7 @@ description: >-
 
 - 新規翻訳プロジェクトを `~/oss/<project>/` に立ち上げる
 - 既存 EPUB から日英並置 VitePress サイトを構築する
-- proof:epub-en (10 項目) / proof:en-ja (11 項目) チェックリストを参照する
+- proof:epub-en (11 項目) / proof:en-ja (12 項目) チェックリストを参照する
 - extract-epub.mjs / gen-tickets.mjs を新書籍向けにカスタマイズする
 - extract-epub.mjs 改修後の再校正バッチを起票する ([references/proof-checklists.md](references/proof-checklists.md) の reproof セクション)
 - 中断したセッションから `bd ready` で復帰する
@@ -130,7 +130,7 @@ loop:
 
 ### 中断・再開時
 
-- **中断時**: 進行中の subagent が `bd update <id> --status in_progress` で残す。`bd dolt push && git push` でリモート同期
+- **中断時**: 進行中の subagent が `bd update <id> --status in_progress` で残す。`bd dolt push && git push` でリモート同期。コミット前に `bd export` (または `bd dolt push`) を走らせて `.beads/issues.jsonl` を確定させてから `git add && git commit` する。export がコミット後にずれると beads 状態が stranded する
 - **再開時 (別セッション)**: `bd dolt pull` → skill が再 triggers → オーケストレーションループに戻る
 - bd の状態 = 真実のソース。orchestrator は前セッションのコンテキストを引き継がず、`bd ready` で次の作業を機械的に取得
 
@@ -154,6 +154,7 @@ loop:
 - である調逸脱チェック: `grep -nE 'です。|ます。' docs/ja/*.md` がゼロ件
 - 代表章 (1 / 中央 / 最後) を目視確認、`npm run dev` で表示確認
 - **内部リンク整合性**: `fix-internal-links.mjs` (xhtml→相対 MD) → `inject-anchors.mjs` (アンカー補完) → `check-links.mjs` (errors=0 必須)。dev で章間ジャンプ / 図表 / 脚注 / sidebar を 10 件以上抜き打ちクリック
+- **構造パリティ**: `node scripts/check-structure-parity.mjs` (全 en/ja ペア) で hard mismatch ゼロ (サイドバー個数・コードフェンス数・見出しレベルが en/ja 整合)。warn (MD009/MD028/番号リスト/Recap小見出し) は内容を 1 件ずつ確認
 
 ## 翻訳規約 (要約)
 
@@ -179,6 +180,8 @@ prompt template と担当ラベル:
 
 Claude Code は `Agent` tool で spawn (自動 context 分離)、Codex 等は inline 実行で `proof:en-ja` のみ新規 CLI セッション。プレースホルダは orchestrator が埋める。
 
+proof:en-ja agent を spawn する際は、完了条件に `node scripts/check-structure-parity.mjs <file>` の hard mismatch ゼロを必須とする (生成チケット本文にも記載済み)。
+
 ## bd 連携
 
 プロジェクトの `AGENTS.md` (Claude Code は import 経由) に bd 統合ブロックがあれば、ad-hoc TODO ではなく **`bd` を使う**: `bd ready` / `bd show <id>` / `bd update <id> --claim` / `bd note` / `bd close <id> --reason` / `bd dolt {push,pull}`。orchestrator は `scripts/claim-next-ticket.sh` を使うと race-free に取得できる。
@@ -188,14 +191,15 @@ Claude Code は `Agent` tool で spawn (自動 context 分離)、Codex 等は in
 3 つの reference ファイルにテーマ別に集約:
 
 - [references/pipeline-customization.md](references/pipeline-customization.md) — 5 フェーズ全体像、extract-epub.mjs / gen-tickets.mjs の CONFIG 埋め方、EPUB 出版社別バリエーション、Cloudflare Pages / GitHub Pages 各デプロイ手順
-- [references/proof-checklists.md](references/proof-checklists.md) — proof:epub-en (10 項目) / proof:en-ja (11 項目) / extract-epub 改修後の reproof パターン
+- [references/proof-checklists.md](references/proof-checklists.md) — proof:epub-en (11 項目) / proof:en-ja (12 項目) / extract-epub 改修後の reproof パターン
 - [references/templates.md](references/templates.md) — ファイル名規則、用語集テンプレート、スタイルガイドテンプレート
 
-補足: コードフラグメント検出 lint (`scripts/check-code-fragments.mjs`) は抽出/翻訳両方で実行可。
+補足: コードフラグメント検出 lint (`scripts/check-code-fragments.mjs`) は抽出/翻訳両方で実行可。構造パリティ検査 (`scripts/check-structure-parity.mjs`) は proof:epub-en (#11) / proof:en-ja (#12) / Final で en/ja の構造整合を機械チェックする。
 
 ## Bundled scripts と agents
 
 - `scripts/extract-epub.mjs` / `scripts/gen-tickets.mjs` — CONFIG 化された EPUB→MD 抽出 / beads チケット生成
+- `scripts/check-structure-parity.mjs` — en/ja 構造パリティ検査 (サイドバー個数 / コードフェンス / 見出しレベル = hard、markdownlint / 番号リスト / Recap小見出し = warn)
 - `scripts/init-project.sh` — 新規プロジェクト初期化 (assets 配置 + デプロイ先選択対応)
 - `scripts/init-cloudflare-deployment.sh` / `scripts/migrate-to-cloudflare.sh` — Cloudflare 初回デプロイ / GitHub Pages からの移行
 - `scripts/lib/*.sh` — Cloudflare 系テンプレ配置 / README 公開先セクションの冪等更新

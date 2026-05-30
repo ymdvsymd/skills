@@ -2,15 +2,15 @@
 
 校正フェーズの 3 種チェックリストをまとめたリファレンス。
 
-- **proof:epub-en**: 抽出した英文 MD の構造校正 (10 項目)
-- **proof:en-ja**: 日本語訳文の校正 (11 項目)
+- **proof:epub-en**: 抽出した英文 MD の構造校正 (11 項目)
+- **proof:en-ja**: 日本語訳文の校正 (12 項目)
 - **reproof**: extract-epub.mjs 改修後の再校正パターン
 
 ---
 
-# Proof:EPUB-EN 10 項目チェックリスト
+# Proof:EPUB-EN 11 項目チェックリスト
 
-EPUB → Markdown 抽出結果 (`docs/en/*.md`) の構造校正用 10 項目。`Proof-EPUB-EN Agent` が使用する。
+EPUB → Markdown 抽出結果 (`docs/en/*.md`) の構造校正用 11 項目。`Proof-EPUB-EN Agent` が使用する。
 
 ## 観点
 
@@ -54,6 +54,9 @@ grep -oE '!\[[^]]*\]\(\.\./images/[^)]+\)' docs/en/<file>.md \
 - **Note**: `<div class="note"|"feature">` → `> **Title**\n> ...\n> - 箇条書き` 形式
 - **figurecaption**: `*Figure N.N: ...*` (italic、内部に `**bold**` を含めない)
 - **tablecaption**: 同様に `*Table N.N: ...*`
+- **サイドバー判別**: サイドバーは必ず `> **Sidebar: <title>**` 形式で出力され Note (`> **Note**`) と機械判別できること (extract-epub fix C)
+- **Recap 系サイドバーの小見出し**: Recap 系サイドバー (`<dl><dt>小見出し</dt><dd><p>本文</p></dd>`) の `<dt>` 小見出しが `> **小見出し**` として保持されているか (fix B。脱落していたら抽出器バグ)
+- **blockquote 化**: サイドバー本文の全行が `>` で blockquote 化されているか。空の引用区切りは bare `>` (末尾スペースなし / fix D)
 
 `extract-epub.mjs` の `convertNote` / `figurecaption` 処理を経ているか確認。
 
@@ -164,6 +167,20 @@ exit 1 / 検出ありの場合:
 - `convertOReillyNote` の child regex が `<p[^>]*>` のままで `<pre>` を誤マッチ → `<p\b[^>]*>` に修正
 - sidebar/Note 内 `<pre>` が child iteration の対象から漏れている → `<p|pre|ul|ol>` の alternation に追加
 
+**継続行インデントの混入** (extract-epub fix A の回帰): `>` 内本文に `>    runtime,` のような 4 スペース以上の不正インデントが残っていないか。残っていると本来のコードブロックが blockquote 内 indented code として誤認される。grep 例:
+
+```bash
+grep -nE '^>[[:space:]]{4,}\S' docs/en/<file>.md
+```
+
+### 11. 構造パリティ (機械検査)
+
+`node scripts/check-structure-parity.mjs docs/en/<file>.md` を実行し hard mismatch ゼロを確認する。
+
+- EN 単独でも C3 (フェンス開閉) / C5 (MD009 行末スペース) / C6 (MD028) / C9 (継続行インデント = fix A 回帰) が走る
+- ja が既に存在する場合は C1 (サイドバー個数) / C2 (フェンス数) / C4 (見出しレベル列) のパリティも検査される
+- 本フェーズでは EN の構造健全性確認が主目的 (ja 側のパリティは proof:en-ja #12 で本格確認)
+
 ## 進め方
 
 1. `docs/en/<file>.md` を冒頭から末尾まで通読
@@ -171,13 +188,13 @@ exit 1 / 検出ありの場合:
 3. 軽微な問題は直接 `docs/en/<file>.md` を修正
 4. 構造的不具合は `extract-epub.mjs` 改修 follow-up チケットを起票
 5. 修正観点と件数を bd notes に記録 (例: `"#3 missing image: foo.jpg, #5 figurecaption 3件追加, #8 watermark 2行除去, #9 anchor 漏れ 4件 inject"`)
-6. `bd close <ticket_id> --reason "proof:epub-en passed (10/10)"` を実行
+6. `bd close <ticket_id> --reason "proof:epub-en passed (11/11)"` を実行
 
 ---
 
-# Proof:EN-JA 11 項目チェックリスト
+# Proof:EN-JA 12 項目チェックリスト
 
-訳文 (`docs/ja/*.md`) の品質校正用 8 項目。`Proof-EN-JA Agent` が **Translation Agent とは別プロセスで初見** で読みながら使用する。確認バイアスを排除するため、自分が訳したのではないと意識する。
+訳文 (`docs/ja/*.md`) の品質校正用 12 項目。`Proof-EN-JA Agent` が **Translation Agent とは別プロセスで初見** で読みながら使用する。確認バイアスを排除するため、自分が訳したのではないと意識する。
 
 ## 観点
 
@@ -193,6 +210,8 @@ echo "en: $en_p, ja: $ja_p"
 ```
 
 差異が大きい場合は手動で en/ja を並べて比較。
+
+**「未訳」と判断する前に必ず** `grep -nF "<原文中の識別子・固有名詞・数式の一部>" docs/ja/<file>.md` を実行し、対応する日本語が実在しないことを確認する。訳語に置換済みのものを未訳と誤認しない (確認バイアス回避)。grep でヒットすれば訳済み。
 
 ### 2. 誤訳なし
 
@@ -245,7 +264,10 @@ diff <(grep -cE '^\| ' docs/en/<file>.md) <(grep -cE '^\| ' docs/ja/<file>.md)
 diff <(grep -cE '^- |^\d+\.' docs/en/<file>.md) <(grep -cE '^- |^\d+\.' docs/ja/<file>.md)
 ```
 
-差異があれば修正。
+差異があれば修正。さらに以下も確認:
+
+- 見出しレベル列を `diff <(grep -E '^#+' docs/en/<file>.md) <(grep -E '^#+' docs/ja/<file>.md)` で確認 (レベルを `##`→`###` 等にずらしていないか)
+- 番号付きリスト (`1.` `2.`) が JA で平文段落に潰れていないか (en/ja で番号項目数が一致するか)
 
 ### 6. 図表参照
 
@@ -423,10 +445,18 @@ node scripts/check-code-fragments.mjs docs/ja/<file>.md
 - 断片化が検出されたら、対応する `docs/en/` のフェンス済みコードブロックを `docs/ja/` にそのままコピーし直す
 - コードブロック内のコメント (`# ...`) は英語原文のまま維持 (訳さない)
 
+### 12. 構造パリティ (機械検査)
+
+`node scripts/check-structure-parity.mjs <file>.md` を実行する。
+
+- **hard** (C1 サイドバー個数 `> **Sidebar:` == `> **コラム:` / C2 コードフェンス数 / C3 フェンス開閉 / C4 見出しレベル列) は exit 1。**必ず修正**する (サイドバー個数不一致 = コラムの訳し忘れ、フェンス数不一致 = コードブロック欠落)
+- **warn** (C5 MD009 / C6 MD028 / C7 番号リスト項目数 / C8 引用内太字小見出し数 = Recap 小見出し脱落の疑い / C9) は誤検出もありうるため 1 件ずつ精査。構造脱落なら修正、翻訳判断による正当な乖離なら notes に理由を記録
+- 編集で markdownlint MD009 (行末スペース1個) / MD028 (引用間空行) を新たに混入しないこと (空の引用区切りは bare `>`)
+
 ## 進め方
 
 1. `docs/en/<file>.md` と `docs/ja/<file>.md` を**並べて**対比 (両方を上から順に読み比べる)
-2. 観点 1〜11 を順に確認
+2. 観点 1〜12 を順に確認
 3. 問題箇所は `docs/ja/<file>.md` に**直接修正**
 4. 修正観点と件数を bd notes に記録 (例: `"#2 誤訳 3 件 (受動態 2, 複数形 1), #3 用語不一致 2 件, #4 です・ます 1 件, #10 死リンク 5 件"`)
 5. `bd close <ticket_id> --reason "proof:en-ja: <観点>×<件数> 修正"` を実行
@@ -496,7 +526,7 @@ for (const f of enFiles) {
   const args = [
     'create',
     '--title', `再校正(EPUB-EN v${VERSION}): ${f} 抽出 MD の構造校正`,
-    '--description', `extract-epub.mjs ${REASON} に対応するため、${f} を v${VERSION} で再校正する。\n\n## 観点\n[8 項目チェックリスト + 改修箇所に特化した追加観点]`,
+    '--description', `extract-epub.mjs ${REASON} に対応するため、${f} を v${VERSION} で再校正する。\n\n## 観点\n[proof:epub-en 11 項目チェックリスト + 改修箇所に特化した追加観点]`,
     '--type', 'task',
     '--priority', '2',
     '--labels', `proof:epub-en-v${VERSION},translation`,
@@ -531,6 +561,10 @@ extract-epub.mjs の改修は **1 ファイル内の 5〜30 行レベルの微�
 | **sidebar h5 タイトル抽出順の修正** | sidebar のある章 |
 | **sup ref 双方向リンク復元** | 脚注のある章 |
 | **callout `(N)` の `<a id="callout_...">` 保持** | コードブロック callout のある章 |
+| **fix A: `convertInline` 継続行インデント除去** | blockquote 内本文を持つ全章 |
+| **fix B: `convertOReillyNote` が Recap の `<dt>` 小見出しを描画** | Recap 系サイドバーのある章 |
+| **fix C: サイドバーラベル前置 `> **Sidebar: <title>**`** | サイドバーのある全章 |
+| **fix D: blockquote 空区切りを bare `>` で生成 (MD009)** | blockquote を持つ全章 |
 
 ## 再校正フローの判断
 

@@ -343,6 +343,18 @@ done
 - 外部リンク: URL はそのまま、リンクテキストは訳す
 - 参考文献の書誌情報は原文のまま
 
+### サイドバー / コラム
+
+- サイドバーは EN 側 `> **Sidebar: <title>**`、JA 側 **`> **コラム: <title>**`** に統一する。本文の全行を `>` で囲む (裸段落・`##### title`・別行 `コラム` 等の揺れた書式を使わない)
+- Recap 系サイドバーの小見出し (`<dt>` 由来) は `> **小見出し**` として EN と同数保持する
+- 空の引用区切り行は bare `>` (末尾スペースなし)。`> ` (末尾スペース) は markdownlint MD009 違反
+
+### markdownlint (MD009 / MD028)
+
+- 行末スペース禁止 (MD009)。ハードブレイクが要る箇所のみスペース 2 個 (1 個 / 3 個以上は違反)
+- blockquote (`>`) ブロックの間に空行を挟まない (MD028)。連続する引用は空行なしで繋ぐ
+- 検証: `node scripts/check-structure-parity.mjs <file>.md`
+
 ## 図表参照表記
 
 | 原文 | 訳 |
@@ -395,18 +407,22 @@ done
 - `application` → 「アプリケーション」(ソフトウェア) / 「適用」(動詞)
 - `data` → 「データ」 (常にカタカナ、複数形扱いせず単数として訳す)
 
-## 校正観点 (proof:en-ja 8 項目)
+## 校正観点 (proof:en-ja 12 項目)
 
-詳細は book-translation-pipeline skill の `references/proof-en-ja-checklist.md` 参照:
+詳細は book-translation-pipeline skill の `references/proof-checklists.md` の Proof:EN-JA 12 項目を参照:
 
 1. 訳漏れなし
 2. 誤訳なし
 3. 用語一貫性 (`_glossary.md` 準拠)
 4. である調統一
-5. Markdown 構造一致
+5. Markdown 構造一致 (見出しレベル列・番号リスト項目数)
 6. 図表参照統一
 7. 原文維持 (コードブロック、書名等)
 8. 数値・年号一致
+9. 日本語表現の自然さ (直訳臭・冗長・てにをは・主述ねじれ)
+10. 内部リンクの機能確認
+11. コードブロック整合 (フェンス断片化なし)
+12. 構造パリティ (機械検査: サイドバー個数・コードフェンス・見出しレベル = hard、markdownlint / 番号リスト / Recap小見出し = warn)
 ```
 
 ## カスタマイズポイント
