@@ -25,8 +25,10 @@
 #                  __CF_PROJECT_NAME__, __COMPAT_DATE__,
 #                  __DEPLOY_URL__, __DEPLOY_ACCESS_NOTE__, __DEPLOY_INSTRUCTIONS_BLOCK__
 #   - Cloudflare 選択時は wrangler.toml / functions/_middleware.ts / cloudflare-pages.yml /
-#     .env.local.example を配置し、vitepress-config.mts の `base:` 行は削除する
-#   - GitHub Pages 選択時は既存どおり github-deploy-yml.template を配置
+#     .env.local.example と bot 非クロール用の docs/public/{robots.txt,_headers} を配置し、
+#     vitepress-config.mts の `base:` 行は削除する (noindex の head はそのまま残す)
+#   - GitHub Pages 選択時は github-deploy-yml.template を配置し、
+#     公開サイトなので vitepress-config.mts の noindex head 行は削除する
 #   - bd (beads) は別途 `bd init` を実行してください。
 
 set -euo pipefail
@@ -191,6 +193,14 @@ case "$DEPLOY_TARGET" in
     ;;
   github)
     copy_with_replace "$ASSETS_DIR/github-deploy-yml.template" ".github/workflows/deploy.yml"
+    # GitHub Pages は公開サイトなので noindex meta を外す
+    # (bot 非クロールは cloudflare deploy のみ。robots.txt / _headers も cloudflare 側でのみ配置)
+    if [[ -e docs/.vitepress/config.mts ]] && \
+       grep -qE "^[[:space:]]*head:[[:space:]]*\[\[" docs/.vitepress/config.mts; then
+      sed -i.bak -E "/^[[:space:]]*head:[[:space:]]*\[\[/d" docs/.vitepress/config.mts
+      rm -f docs/.vitepress/config.mts.bak
+      echo "  removed: head (noindex) line from docs/.vitepress/config.mts (github deploy)"
+    fi
     ;;
 esac
 

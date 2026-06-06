@@ -40,6 +40,7 @@ function chapterSidebar(lang: 'en' | 'ja') {
 }
 
 export default defineConfig({
+  head: [['meta', { name: 'robots', content: 'noindex, nofollow' }]],
   title: '__BOOK_TITLE_JA__',
   description: '__BOOK_TITLE_JA__ — bilingual VitePress site',
   base: '/__REPO_NAME__/',

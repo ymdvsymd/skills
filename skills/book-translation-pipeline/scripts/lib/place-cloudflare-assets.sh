@@ -32,7 +32,7 @@ if [[ ! -d "$ASSETS_DIR" ]]; then
   exit 1
 fi
 
-mkdir -p .github/workflows functions
+mkdir -p .github/workflows functions docs/public
 
 place() {
   local src="$1"
@@ -54,3 +54,8 @@ place "$ASSETS_DIR/cloudflare-pages-yml.template"      ".github/workflows/cloudf
 place "$ASSETS_DIR/cloudflare-middleware-ts.template"  "functions/_middleware.ts"
 place "$ASSETS_DIR/wrangler-toml.template"             "wrangler.toml"
 place "$ASSETS_DIR/env-local-example.template"         ".env.local.example"
+
+# bot 非クロール: robots.txt で取得拒否、_headers で X-Robots-Tag を全レスポンスに付与。
+# VitePress は docs/public/ を dist 直下にコピーするため、Cloudflare がそのまま配信する。
+place "$ASSETS_DIR/robots-txt.template"               "docs/public/robots.txt"
+place "$ASSETS_DIR/headers.template"                  "docs/public/_headers"

@@ -705,6 +705,10 @@ book-translation-pipeline スキルの Cloudflare Pages 対応の中身を解説
 | `wrangler.toml` | Cloudflare Pages プロジェクト名（**ランダム 16 文字**）とビルド出力先を固定 |
 | `.github/workflows/cloudflare-pages.yml` | master/main push で Cloudflare Pages へ自動デプロイ |
 | `.env.local.example` | API Token / Basic auth 情報のテンプレ。`.env.local` にコピーして埋める |
+| `docs/public/robots.txt` | 全 bot に取得拒否（`Disallow: /`）。VitePress が dist 直下にコピー |
+| `docs/public/_headers` | 全レスポンスに `X-Robots-Tag: noindex, nofollow` を付与（Cloudflare Pages が解釈） |
+
+加えて、`docs/.vitepress/config.mts` の `head` に `<meta name="robots" content="noindex, nofollow">` が入る（テンプレート既定。GitHub Pages deploy 時のみ `init-project.sh` が削除）。
 
 ## 前提
 
@@ -766,6 +770,18 @@ printf '%s' "$BASIC_AUTH_PASS" | npx wrangler pages secret put BASIC_AUTH_PASS -
 - **16 文字のランダム英数字**（先頭は英字保証）を Cloudflare プロジェクト名に使うことで discovery 困難化
 - ただし TLS 証明書は **Certificate Transparency (CT) ログ** に登録されるため、CT ログ経由で発見される可能性はある（完全な隠蔽は不可）
 - 真に閲覧者を限定したい場合は **Cloudflare Access** に切替: 独自ドメイン + Access ポリシー（メアド単位 / SSO）。`functions/_middleware.ts` を削除して Access 設定するだけで移行可能
+
+## bot 非クロール（robots.txt / noindex / X-Robots-Tag）
+
+著作権のある書籍の翻訳なので、検索エンジン・LLM クローラに拾われないよう **3 層** で多層防御する（Cloudflare deploy 時に既定で有効）:
+
+| 層 | 配置 | 役割 |
+|---|---|---|
+| `robots.txt` | `docs/public/robots.txt`（`Disallow: /`） | 行儀の良い bot に**そもそも取得させない** |
+| `meta robots` | `config.mts` の `head` | HTML を取得した bot に index 拒否を伝える |
+| `X-Robots-Tag` | `docs/public/_headers` | HTTP ヘッダで index 拒否。HTML 以外の応答にも効く |
+
+robots.txt 準拠 bot は取得しないので `noindex` を読まないが、これらのサイトはランダム URL かつ外部被リンクが無いため URL 単体の index 化は実質起きない。robots.txt を無視する bot は `meta` / `X-Robots-Tag` で index を防ぐ。GitHub Pages（公開意図）では `init-project.sh` が `noindex` head を外し、robots.txt / `_headers` も配置しない。
 
 ## トラブルシュート
 
