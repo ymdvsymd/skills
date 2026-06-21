@@ -1,28 +1,41 @@
-# APM cache (per APM official guidance)
+# APM のキャッシュ (APM 公式ガイダンスに従い commit しない)
 apm_modules/
 
-# Skill development workspaces and evaluation outputs (skill-creator iterations).
-# Only the legacy in-skill evals/ directory is ignored; the top-level evals/
-# directory (waza project-mode layout) is tracked.
+# Skill 開発用の作業ディレクトリと eval 出力 (skill-creator の試行錯誤で生成される)。
+# ここで無視するのは legacy な in-skill の evals/ のみ。
+# top-level の evals/ (waza project-mode のレイアウト) は追跡対象。
 skills/*/evals/
 *-workspace/
 
-# Project-scope APM artifacts (このrepoは user scope install 専用)
+# Project-scope の APM 生成物 (この repo は user-scope install 専用)
 apm.lock.yaml
 .claude/skills/
 
-# Claude Code local settings
+# Claude Code のローカル設定
 .claude/settings.local.json
 
-# macOS
+# waza の eval 実行で生成される成果物 (commit しない)。
+# CI (.github/workflows/waza-eval.yml) は
+#   waza run --output-dir results --transcript-dir transcripts --verbose
+# を実行し、results/ と transcripts/ を artifact として upload する (30 日保持)。
+# baseline/ と updated/ はメンテナンス workflow で regression 比較用に
+# `waza run <name> --output-dir baseline|updated` が作る出力先。
+# .waza-cache/ は `waza run --cache` のデフォルト cache ディレクトリ。
+results/
+transcripts/
+baseline/
+updated/
+.waza-cache/
+
+# macOS が生成するメタデータ
 .DS_Store
 
-# Editor
+# エディタの設定・一時ファイル
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Defense-in-depth: local env files for eval execution that contain PII / personal paths
+# 多層防御: eval 実行用のローカル env ファイル (PII / 個人のパスを含むため)
 evals/*/.env.local
 evals/*/tasks/*.local.yaml
