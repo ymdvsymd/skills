@@ -25,6 +25,8 @@ H1〜H4 が原文 XHTML の見出し構造と一致しているか:
 
 不一致が見つかったら `extract-epub.mjs` の `convertToBlocks` 内 `case 'p'` の class 判定を見直す。
 
+見出しの直前/直後に `---` (水平線) が混入していないか。VitePress の `<h2>` は `border-top` を持つため、隣接する `---` (<hr>) は線が二重に表示される。`node scripts/check-structure-parity.mjs docs/en/<file>.md` の C10 (hard) で検出できる。混入していれば削除する (cover/titlepage 由来の装飾 `---` は手書き index.md に残りやすい)。
+
 ### 2. 段落の欠落なし
 
 原文 `<p>` タグが Markdown 段落として存在するか。EPUB の `<div class="story">` や `<div id="sbo-rt-content">` の中身が漏れなく走査されているか確認。`extract-epub.mjs` の `parser.contentDivId` / `contentDivClass` 設定が適切か。
@@ -268,6 +270,7 @@ diff <(grep -cE '^- |^\d+\.' docs/en/<file>.md) <(grep -cE '^- |^\d+\.' docs/ja/
 
 - 見出しレベル列を `diff <(grep -E '^#+' docs/en/<file>.md) <(grep -E '^#+' docs/ja/<file>.md)` で確認 (レベルを `##`→`###` 等にずらしていないか)
 - 番号付きリスト (`1.` `2.`) が JA で平文段落に潰れていないか (en/ja で番号項目数が一致するか)
+- **見出しに隣接した `---` (水平線) がないか**。VitePress の `<h2>` は `border-top` を持つため、見出しの直前/直後の `---` は線が二重に表示される。あれば削除する (区切りは見出しの border が担う)。`node scripts/check-structure-parity.mjs <file>.md` の C10 (hard) で機械検出できる
 
 ### 6. 図表参照
 

@@ -61,11 +61,11 @@ EPUB spine 順 == FILENAME_MAP の値の NN 順 == docs/en/ ASCII ソート順 =
 
 サポートするデプロイ先は **GitHub Pages（公開）** と **Cloudflare Pages + Basic 認証（関係者限定）** の 2 通り。
 
-**`init-project.sh` での確定優先順**: (1) `--deploy-target=cloudflare|github` 明示 → (2) 環境変数 `DEPLOY_TARGET` → (3) `gh repo view --json visibility` で自動判定 (PRIVATE→cloudflare, PUBLIC→github) → (4) tty 対話プロンプト → (5) tty 無しで判定不能なら exit 1。
+**`init-project.sh` での確定優先順**: (1) `--deploy-target=cloudflare|github` 明示 → (2) 環境変数 `DEPLOY_TARGET` → (3) `gh repo view --json visibility` で自動判定 (PRIVATE→cloudflare, PUBLIC→github) → (4) tty 対話 → (5) tty 無しで判定不能なら exit 1。
 
-**orchestrator の振る舞い**: ユーザー入力の語彙を `--deploy-target=...` に翻訳する。「Cloudflare/Basic 認証/内部限定/関係者だけに/private で公開」→ cloudflare、「GitHub Pages/公開で/OSS として/オープンに」→ github。明示なし & 自動判定不能なら **人間に確認** (agent CLI の Bash は tty を持たないことが多く、対話 read プロンプトに到達させない)。
+**orchestrator の振る舞い**: ユーザー入力の語彙を `--deploy-target=...` に翻訳する (「Cloudflare/Basic 認証/関係者限定/private」→ cloudflare、「GitHub Pages/公開/OSS」→ github)。明示なし & 自動判定不能なら **人間に確認** (agent CLI の Bash は tty を持たないことが多い)。
 
-**Cloudflare 選択時**: `.env.local` に `CLOUDFLARE_API_TOKEN` (`Pages > Edit`) / `CLOUDFLARE_ACCOUNT_ID` / `BASIC_AUTH_USER` / `BASIC_AUTH_PASS` を入れ `bash $SKILL_DIR/scripts/init-cloudflare-deployment.sh` を 1 回実行。配信 URL は `https://<RANDOM_16_CHARS>.pages.dev/` (`--cloudflare-project-name=<name>` で上書き可)。**private リポジトリ運用**が前提。完全な隠蔽が要件なら **Cloudflare Access** に切替 (`functions/_middleware.ts` 削除のみで移行可)。**既存 GitHub Pages → 移行**は `bash $SKILL_DIR/scripts/migrate-to-cloudflare.sh` → `.env.local` 編集 → `--continue` (旧 workflow 削除・base 行削除・配置・初回デプロイ・Secrets 登録・gh-pages 削除・README 更新まで一気通貫)。
+**Cloudflare 選択時**: `.env.local` に `CLOUDFLARE_API_TOKEN` (`Pages > Edit`) / `CLOUDFLARE_ACCOUNT_ID` / `BASIC_AUTH_USER` / `BASIC_AUTH_PASS` を入れ `bash $SKILL_DIR/scripts/init-cloudflare-deployment.sh` を 1 回実行。配信 URL は `https://<RANDOM_16_CHARS>.pages.dev/` (`--cloudflare-project-name=<name>` で上書き可)。**private リポジトリ運用**前提。完全な隠蔽が要件なら **Cloudflare Access** に切替 (`functions/_middleware.ts` 削除のみ)。**既存 GitHub Pages → 移行**は `bash $SKILL_DIR/scripts/migrate-to-cloudflare.sh` → `.env.local` 編集 → `--continue` で一気通貫 (詳細は下記 references)。
 
 詳細は [references/pipeline-customization.md](references/pipeline-customization.md) の Deploy セクション。
 
@@ -82,7 +82,7 @@ EPUB spine 順 == FILENAME_MAP の値の NN 順 == docs/en/ ASCII ソート順 =
        [--deploy-target=cloudflare|github] [--cloudflare-project-name=<name>]
    ```
 
-   `$SKILL_DIR` は agent ごとに異なる (Claude Code: `~/.claude/skills/.../`、Codex / APM cross-client: `~/.codex/skills/.../` か `~/.agents/skills/.../`)。配置物: `README.md` / `package.json` / `AGENTS.md` (canonical) + `CLAUDE.md` import / `docs/.vitepress/` / `docs/{index.md,ja/index.md}` / `scripts/{extract-epub,gen-tickets,claim-next-ticket}*`、デプロイ先別 workflow と Cloudflare 系ファイル (`vitepress-config.mts` の `base:` は Cloudflare 時自動削除)。
+   `$SKILL_DIR` は agent ごとに異なる (Claude Code `~/.claude/skills/`、Codex / cross-client `~/.agents/skills/`)。配置物: `README.md` / `package.json` / `AGENTS.md` (canonical) + `CLAUDE.md` import / `docs/.vitepress/` / `docs/{index.md,ja/index.md}` / `scripts/*` (下記 Bundled scripts)、デプロイ先別 workflow と Cloudflare 系ファイル (`vitepress-config.mts` の `base:` は Cloudflare 時自動削除)。
 
 2. **EPUB 配置と依存インストール**: `cp /path/to/book.epub docs/<epub>.epub && npm install`。`.github/workflows/*.yml` は `branches: [main, master]` 対応。GitHub Pages なら `Settings → Pages → Source: GitHub Actions` 有効化のみ、Cloudflare なら `.env.local` 編集 + `bash $SKILL_DIR/scripts/init-cloudflare-deployment.sh` を 1 回実行。
 
@@ -138,7 +138,7 @@ loop:
 
 #### s2 / s3 を自走するか、人間レビューを挟むか
 
-「自動進行で任せたい」と明示されれば **s2/s3 を orchestrator が自走**。ただし以下のいずれかに該当する場合は s2/s3 完了後に **ユーザーレビューを 1 回挟む**: (a) 特殊ドメイン (法律・医学・芸術・人類学)、(b) 先行翻訳プロジェクト無しで用語の前例なし、(c) 長大書籍 (章数 30+ または 1 章 20 ページ超)、(d) である調以外の文体など特殊スタイル要求。
+「自動進行で任せたい」と明示されれば **s2/s3 を orchestrator が自走**。ただし以下に該当すれば s2/s3 完了後に **ユーザーレビューを 1 回挟む**: (a) 特殊ドメイン (法律・医学・芸術等)、(b) 用語の前例なし、(c) 長大書籍 (章数 30+)、(d) である調以外の特殊スタイル要求。
 
 該当しなければ (汎用技術書・用語継承可能・章数 25 以下) **自走で問題ない**。`_glossary.md` / `_styleguide.md` は run-time 追記で OK、初版に完璧を求めなくてよい。
 
@@ -149,12 +149,13 @@ loop:
 - である調逸脱チェック: `grep -nE 'です。|ます。' docs/ja/*.md` がゼロ件
 - 代表章 (1 / 中央 / 最後) を目視確認、`npm run dev` で表示確認
 - **内部リンク整合性**: `fix-internal-links.mjs` (xhtml→相対 MD) → `inject-anchors.mjs` (アンカー補完) → `check-links.mjs` (errors=0 必須)。dev で章間ジャンプ / 図表 / 脚注 / sidebar を 10 件以上抜き打ちクリック
-- **構造パリティ**: `node scripts/check-structure-parity.mjs` (全 en/ja ペア) で hard mismatch ゼロ (サイドバー個数・コードフェンス数・見出しレベルが en/ja 整合)。warn (MD009/MD028/番号リスト/Recap小見出し) は内容を 1 件ずつ確認
+- **構造パリティ**: `node scripts/check-structure-parity.mjs` (全 en/ja ペア) で hard mismatch ゼロ (サイドバー個数・コードフェンス数・見出しレベル整合、見出し隣接 `---`=C10 ゼロ)。warn (MD009/MD028/番号リスト/Recap小見出し) は 1 件ずつ確認
 
 ## 翻訳規約 (要約)
 
 - 文体: **である調** (です・ます禁止)。用語は `docs/ja/_glossary.md` 準拠
 - Markdown 構造・コードブロック・SQL・テーブル名・書名・著者名・`./images/` 参照は原文維持 (画像 alt は訳す)
+- **見出しに隣接した `---` を置かない**: VitePress の `<h2>` は `border-top` を持ち、隣接 `---` と線が二重になる。区切りは見出しに任せる。`check-structure-parity.mjs` の C10 (hard) が章・補助ファイル・index.md 横断で検出
 - 図表参照は「図N.N」「表N.N」「第N章」「付録N」で統一
 - 内部リンク: `xxx.xhtml#anchor` → `./<NN_slug>.md#anchor` は `extract-epub.mjs` が自動変換。図表アンカー / 脚注 / callout の詳細は [references/templates.md](references/templates.md) の Styleguide を参照
 - 後追い修正: `node scripts/fix-internal-links.mjs && node scripts/inject-anchors.mjs`。Final で `node scripts/check-links.mjs` (errors=0 必須)
@@ -194,7 +195,7 @@ proof:en-ja agent を spawn する際は、完了条件に `node scripts/check-s
 ## Bundled scripts と agents
 
 - `scripts/extract-epub.mjs` / `scripts/gen-tickets.mjs` — CONFIG 化された EPUB→MD 抽出 / beads チケット生成
-- `scripts/check-structure-parity.mjs` — en/ja 構造パリティ検査 (サイドバー個数 / コードフェンス / 見出しレベル = hard、markdownlint / 番号リスト / Recap小見出し = warn)
+- `scripts/check-structure-parity.mjs` — en/ja 構造パリティ検査 (サイドバー個数 / コードフェンス / 見出しレベル / 見出し隣接 `---`(C10) = hard、markdownlint / 番号リスト / Recap小見出し = warn)
 - `scripts/init-project.sh` — 新規プロジェクト初期化 (assets 配置 + デプロイ先選択対応)
 - `scripts/init-cloudflare-deployment.sh` / `scripts/migrate-to-cloudflare.sh` — Cloudflare 初回デプロイ / GitHub Pages からの移行
 - `scripts/lib/*.sh` — Cloudflare 系テンプレ配置 / README 公開先セクションの冪等更新

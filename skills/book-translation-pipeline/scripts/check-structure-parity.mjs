@@ -16,10 +16,16 @@
 //   [warn] C7 番号リスト項目数  '^(>\s*)?\d+\.' 数の EN/JA 差 (段落化の疑い)
 //   [warn] C8 引用内太字見出し  '^> **' 数の EN/JA 差 (Recap 小見出し脱落の疑い)
 //   [warn] C9 継続行インデント  EN の '^>\s{4,}\S' (extract-epub fix A 回帰)
+//   [hard] C10 見出し隣接の水平線 見出しの直前/直後に置かれた '---' (水平線)。VitePress
+//                               デフォルトテーマは <h2> に border-top を描くため、隣接する
+//                               '---' (<hr>) と線が二重に重なる。docs/{en,ja} 配下の全 .md
+//                               (章・_*.md・index.md すべて) を対象に走査する。
 //
 // 注: C5/C6 は cosmetic な markdownlint 相当で warn 扱い。レガシー (旧 extract-epub が
 //     生成した '> ' 区切り) では多数出るため、ファイル単位で件数集約する。本質的な lint 強制は
 //     プロジェクト側の markdownlint 設定に委ねる。
+//     C10 は章ファイルだけでなく _glossary.md / _styleguide.md / index.md 等も対象にする
+//     (これらは見出し区切りに '---' を挿入しがちで、二重線が起きやすいため)。
 //
 // ja が未作成の章は EN 単独チェック (C3/C5/C6/C9) のみ実行し、パリティ系は skip (info)。
 // proof:epub-en では `node scripts/check-structure-parity.mjs docs/en/<file>.md` で
@@ -129,6 +135,39 @@ function continuationIndent(strippedLines) {
     if (/^>\s{4,}\S/.test(l)) v.push({ line: i + 1, preview: l.slice(0, 70) });
   });
   return v;
+}
+
+// C10: 見出しに隣接した水平線 '---' を検出する。VitePress の <h2> は border-top を持つため、
+// 隣接する <hr> と線が二重に表示される。生の行配列を受け取り (フェンス内 '---' を誤検出しない
+// よう内部で stripFenceLines する)、問題行を返す。
+//   - 先頭の YAML frontmatter 区切り (--- ... ---) は除外
+//   - setext 見出しの下線 (直前行が空でない非見出しテキスト = 段落の見出し化) は除外
+//   - 「直前 or 直後の非空行が ATX 見出し (#..######)」のときのみ違反
+function thematicBreakNearHeading(rawLines) {
+  const s = stripFenceLines(rawLines);
+  const isHR = (l) => /^---+\s*$/.test(l ?? '');
+  const isHeading = (l) => /^#{1,6}\s+\S/.test(l ?? '');
+  const isBlank = (l) => /^\s*$/.test(l ?? '');
+  // 先頭 frontmatter の閉じ '---' 位置 (あれば) を特定して除外する。
+  let fmClose = -1;
+  if (isHR(s[0])) {
+    for (let j = 1; j < Math.min(s.length, 40); j++) { if (isHR(s[j])) { fmClose = j; break; } }
+  }
+  const hits = [];
+  for (let i = 0; i < s.length; i++) {
+    if (!isHR(s[i])) continue;
+    if (i === 0 || i === fmClose) continue; // frontmatter 区切り
+    // setext 下線判定: 直前行が空でなく見出しでもないテキストなら、これは <hr> ではなく見出し下線。
+    const prevImmediate = i === 0 ? '' : s[i - 1];
+    if (!isBlank(prevImmediate) && !isHeading(prevImmediate)) continue;
+    let prev = null; for (let j = i - 1; j >= 0; j--) if (!isBlank(s[j])) { prev = s[j]; break; }
+    let next = null; for (let j = i + 1; j < s.length; j++) if (!isBlank(s[j])) { next = s[j]; break; }
+    if (isHeading(prev) || isHeading(next)) {
+      const heading = isHeading(next) ? next : prev;
+      hits.push({ line: i + 1, heading: heading.trim().slice(0, 50) });
+    }
+  }
+  return hits;
 }
 
 // --- 検査対象ペアの解決 ---
@@ -263,13 +302,30 @@ function checkPair(base) {
   return { base, findings };
 }
 
+// C10 の走査対象を解決する。章ペアと違い _*.md / index.md も含む docs/{en,ja} 全 .md が対象。
+// fileArgs 指定時は basename を en/ja 両ディレクトリで照合する (どちらか存在する側を検査)。
+function resolveC10Targets() {
+  const dirs = [join(REPO_ROOT, 'docs', 'en'), join(REPO_ROOT, 'docs', 'ja')];
+  const out = [];
+  const seen = new Set();
+  const add = (p) => { if (existsSync(p) && !seen.has(p)) { seen.add(p); out.push(p); } };
+  if (fileArgs.length) {
+    for (const a of fileArgs) {
+      const base = basename(a).replace(/\.md$/, '') + '.md';
+      for (const d of dirs) add(join(d, base));
+    }
+  } else {
+    for (const d of dirs) {
+      if (!existsSync(d)) continue;
+      for (const e of readdirSync(d).filter((f) => f.endsWith('.md')).sort()) add(join(d, e));
+    }
+  }
+  return out;
+}
+
 // --- メイン ---
 
 const pairs = resolvePairs();
-if (pairs.length === 0) {
-  console.log('対象の en/ja ペアが見つかりませんでした (docs/en/*.md なし)。');
-  process.exit(0);
-}
 
 let hardTotal = 0;
 let warnTotal = 0;
@@ -294,7 +350,28 @@ for (const base of pairs) {
   if (VERBOSE) for (const f of info) console.log(`  [info] ${f.code} ${f.msg}`);
 }
 
-console.log(`\nChecked ${checked} pair(s).  hard: ${hardTotal} fail / warn: ${warnTotal}`);
+// C10 見出し隣接の水平線 (章・_*.md・index.md 横断)
+let c10Total = 0;
+for (const path of resolveC10Targets()) {
+  const text = readIf(path);
+  if (text == null) continue;
+  const hits = thematicBreakNearHeading(text.split('\n'));
+  if (!hits.length) continue;
+  c10Total += hits.length;
+  hardTotal += hits.length;
+  const rel = path.slice(REPO_ROOT.length + 1);
+  console.log(`=== ${rel} ===`);
+  for (const h of hits) {
+    console.log(`  [hard] C10 見出し隣接の水平線 (L${h.line}): "---" が見出し "${h.heading}" に隣接 — VitePress で線が二重になる。'---' を削除 (見出しの border が区切りになる)`);
+  }
+}
+
+if (pairs.length === 0 && c10Total === 0) {
+  console.log('対象の en/ja ペアが見つかりませんでした (docs/en/*.md なし)。');
+  process.exit(0);
+}
+
+console.log(`\nChecked ${checked} pair(s).  hard: ${hardTotal} fail (うち C10 水平線: ${c10Total}) / warn: ${warnTotal}`);
 if (hardTotal > 0) {
   console.log('✗ 構造パリティに hard mismatch があります (上記を修正)。');
   process.exit(1);
