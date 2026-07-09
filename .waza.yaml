@@ -28,6 +28,8 @@ tokens:
       # --- thinking-partner-for-docs/references ---
       "skills/thinking-partner-for-docs/references/preparation-questions.md": 2000
       "skills/thinking-partner-for-docs/references/stakeholder-lenses.md": 2000
+      # --- worksample-question-generator/references ---
+      "skills/worksample-question-generator/references/question-perspectives.md": 3500
       # --- book-translation-pipeline/references ---
       "skills/book-translation-pipeline/references/pipeline-customization.md": 14000
       "skills/book-translation-pipeline/references/proof-checklists.md": 11000
